@@ -148,3 +148,12 @@ firebase-debug.*.log*
 
 # dataconnect generated files
 .dataconnect
+
+# Firmware: WiFi passwords and Firebase credentials never go in git
+firmware/**/secrets.h
+firmware/**/build/
+
+# Built firmware images (regenerate with npm run fw:publish)
+firmware/public/**/*.bin
+# Flash backups contain embedded WiFi/Firebase secrets
+firmware/**/*.bin

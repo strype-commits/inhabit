@@ -1,19 +1,33 @@
 {
   "name": "inhabit",
-  "version": "0.0.1",
+  "version": "1.0.5",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "build:prod": "vite build --mode production",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview",
+    "deploy:prod": "npm run build:prod && firebase deploy --only hosting:production",
+    "deploy:dev": "npm run build:dev && firebase deploy --only hosting:dev",
+    "deploy:rules": "firebase deploy --only database",
+    "gen:icons": "node scripts/generate-icons.mjs",
+    "deploy:functions": "firebase deploy --only functions",
+    "fw:build": "node scripts/firmware.mjs build",
+    "fw:publish": "node scripts/firmware.mjs publish"
   },
   "dependencies": {
-    "vue": "^3.4.21",
+    "chart.js": "^4.5.1",
     "firebase": "^10.12.3",
+    "pinia": "^4.0.3",
+    "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
-    "vite": "^5.2.0"
+    "sharp": "^0.35.4",
+    "vite": "^5.2.0",
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

@@ -1,89 +1,62 @@
 <template>
-  <div class="login-page">
-    <h1>Login</h1>
-    <p>Enter your email and password</p>
+  <div class="page-narrow">
+    <form class="card" @submit.prevent="submit">
+      <h1>Log in</h1>
 
-    <form @submit.prevent="login">
       <div class="form-group">
-        <label for="email">Email:</label>
-        <input id="email" v-model="email" type="email" required />
+        <label class="form-label" for="email">Email</label>
+        <input id="email" v-model="email" class="form-input" type="email" autocomplete="email" required />
       </div>
 
       <div class="form-group">
-        <label for="password">Password:</label>
-        <input id="password" v-model="password" type="password" required />
+        <label class="form-label" for="password">Password</label>
+        <input id="password" v-model="password" class="form-input" type="password" autocomplete="current-password" required />
       </div>
 
-      <button type="submit">Login</button>
-      <p v-if="error" class="error">{{ error }}</p>
+      <button type="submit" class="btn btn-primary btn-block" :disabled="busy">
+        {{ busy ? 'Logging in…' : 'Log in' }}
+      </button>
+      <p v-if="error" class="form-error">{{ error }}</p>
+
+      <p class="switch">
+        No account? <RouterLink :to="{ name: 'Register', query: route.query }">Register</RouterLink>
+      </p>
     </form>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { auth, loginWithEmail } from '../services/firebase'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { authErrorMessage } from '@/utils/authErrors'
+
+const auth = useAuthStore()
+const router = useRouter()
+const route = useRoute()
 
 const email = ref('')
 const password = ref('')
 const error = ref('')
+const busy = ref(false)
 
-const router = useRouter()
-
-const login = async () => {
+async function submit() {
   error.value = ''
+  busy.value = true
   try {
-    await loginWithEmail({ email: email.value, password: password.value })
-    // Redirect to dashboard after successful login
-    router.push('/')
+    await auth.login({ email: email.value, password: password.value })
+    const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+      ? route.query.redirect
+      : '/'
+    router.push(redirect)
   } catch (err) {
-    error.value = err.message
+    error.value = authErrorMessage(err)
+  } finally {
+    busy.value = false
   }
 }
 </script>
 
 <style scoped>
-.login-page {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background-color: #f3f4f6;
-  border-radius: 0.5rem;
-  text-align: left;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-input {
-  width: 100%;
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  border: 1px solid #ccc;
-}
-
-button {
-  background-color: #06b6d4;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0aa9c5;
-}
-
-.error {
-  color: red;
-  margin-top: 0.5rem;
-}
+.switch { margin: var(--space-4) 0 0; font-size: var(--font-size-sm); }
 </style>

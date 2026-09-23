@@ -1,0 +1,101 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true))",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true) || (auth != null && auth.uid === $uid && !data.exists() && newData.child('role').val() === 'user' && !newData.child('isDeveloper').exists() && !newData.child('sensors').exists())",
+        "username": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "email": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString()"
+        },
+        "isDeveloper": {
+          ".validate": "newData.val() === data.val()"
+        }
+      }
+    },
+    "sensors": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)",
+      "$sensorId": {
+        ".read": "(auth != null && root.child('users').child(auth.uid).child('sensors').child($sensorId).exists()) || (auth != null && root.child('users').child(auth.uid).child('role').val() === 'device')",
+        "variables": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "epoch": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "nextUpdate": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "status": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "firmware": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "rssi": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "bootedAt": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "updatingTo": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "name": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
+        },
+        "location": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
+        },
+        "owner": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
+        },
+        "type": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
+        },
+        "units": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
+        },
+        "primaryVariable": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
+        },
+        "expectedFrequencyMinutes": {
+          ".validate": "newData.isNumber() && newData.val() > 0"
+        },
+        "staleAfterMultiplier": {
+          ".validate": "newData.isNumber() && newData.val() >= 1"
+        },
+        "retentionDays": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 3650"
+        },
+        "showHistory": {
+          ".validate": "newData.isBoolean()"
+        }
+      }
+    },
+    "sensorDataHistory": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)",
+      "$sensorId": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('sensors').child($sensorId).exists()",
+        "$epoch": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists() && newData.exists()",
+          ".validate": "$epoch.matches(/^[0-9]{10}$/)"
+        }
+      }
+    },
+    "commands": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)",
+      "$sensorId": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "version": "1.0.5",
+    "date": null,
+    "changes": [
+      {
+        "type": "feature",
+        "text": "Each sensor card shows when it last reported, and flags sensors that have gone quiet as \"Stale\"."
+      },
+      {
+        "type": "feature",
+        "text": "Sensor pages now have a history graph and a list of recent readings with the time between each one."
+      },
+      {
+        "type": "feature",
+        "text": "A \"Sensor parameters\" section on each sensor page, showing how often it should report and how long its history is kept (editable by admins)."
+      },
+      {
+        "type": "feature",
+        "text": "You now need to log in to see your sensors, and you only see the sensors linked to your account."
+      },
+      {
+        "type": "feature",
+        "text": "Dark mode, switchable from the menu or Settings."
+      },
+      {
+        "type": "feature",
+        "text": "inHabit can be installed as an app on Windows and Android."
+      },
+      {
+        "type": "feature",
+        "text": "A \"What's new\" page (this one)."
+      },
+      {
+        "type": "change",
+        "text": "Sensor cards show the right reading for each sensor type."
+      },
+      {
+        "type": "change",
+        "text": "Refreshed menu, header and forms with clearer error messages."
+      },
+      {
+        "type": "fix",
+        "text": "Moving between sensor pages now loads the new sensor correctly."
+      }
+    ]
+  }
+]

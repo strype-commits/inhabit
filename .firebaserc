@@ -1,5 +1,21 @@
 {
   "projects": {
     "default": "inhabit-webapp"
-  }
+  },
+  "targets": {
+    "inhabit-webapp": {
+      "hosting": {
+        "production": [
+          "inhabit-webapp"
+        ],
+        "dev": [
+          "inhabit-webapp-dev"
+        ],
+        "firmware": [
+          "inhabit-firmware"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -1,0 +1,104 @@
+/* Design tokens — never hardcode these values in components. */
+:root {
+  /* Brand palette */
+  --color-accent-1: #06B6D4;   /* teal/cyan — primary accent, links, focus */
+  --color-accent-2: #10B981;   /* emerald — active/selected */
+  --color-accent-3: #E07B39;   /* burnt orange — header title */
+
+  /* Surfaces */
+  --color-bg: #7386ab;             /* page background */
+  --color-surface: #1F2937;        /* cards, header, footer */
+  --color-surface-raised: #374151; /* inputs, hover rows on cards */
+  --color-drawer-bg: #FFFFFF;
+  --color-drawer-text: #1F2937;
+  --color-border: #4B5563;
+
+  /* Text */
+  --color-text: #FFFFFF;           /* on surfaces */
+  --color-text-page: #111827;      /* directly on --color-bg */
+  --color-text-muted: #9CA3AF;
+  --color-text-on-accent: #FFFFFF;
+
+  /* Semantic status — used for sensor cards, toasts, form errors */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-critical: #EF4444;
+  --color-stale: #9CA3AF;
+  --color-neutral: #6B7280;
+
+  /* Spacing scale */
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px;  --space-5: 20px;  --space-6: 24px;
+  --space-8: 32px;  --space-10: 40px; --space-12: 48px;
+
+  /* Typography */
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --font-size-xs:   12px;
+  --font-size-sm:   14px;
+  --font-size-base: 16px;
+  --font-size-lg:   18px;
+  --font-size-xl:   20px;
+  --font-size-2xl:  24px;
+  --font-size-3xl:  30px;
+
+  --font-weight-light:    300;
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --font-weight-heavy:    800;
+
+  /* Radius */
+  --radius-sm: 4px;  --radius-md: 8px;
+  --radius-lg: 12px; --radius-xl: 16px; --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.14);
+  --shadow-edge: rgba(0,0,0,0.2); /* header/footer fade */
+
+  /* Layout */
+  --header-height: 56px;
+  --footer-height: 48px;
+  --drawer-width: 240px;
+  --content-max-width: 1200px;
+  --form-max-width: 400px;
+
+  /* Z-index layers */
+  --z-base:    1;
+  --z-footer:  10;
+  --z-header:  50;
+  --z-overlay: 100;
+  --z-drawer:  200;
+  --z-modal:   300;
+  --z-toast:   400;
+
+  /* Motion */
+  --transition-fast: 0.2s ease;
+  --transition-drawer: 0.3s ease;
+}
+
+/* Dark mode — redefine only the tokens that change. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #0F172A;
+    --color-text-page: #E5E7EB;
+    --color-drawer-bg: #1F2937;
+    --color-drawer-text: #E5E7EB;
+    --color-surface: #1E293B;
+    --color-surface-raised: #334155;
+    --color-border: #475569;
+  }
+}
+:root[data-theme="dark"] {
+  --color-bg: #0F172A;
+  --color-text-page: #E5E7EB;
+  --color-drawer-bg: #1F2937;
+  --color-drawer-text: #E5E7EB;
+  --color-surface: #1E293B;
+  --color-surface-raised: #334155;
+  --color-border: #475569;
+}
