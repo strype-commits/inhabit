@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:export-filename="C:\Users\SamuelKingstonNichol\Strype\Nicholson Shared Files - SK Share\App Development\inHabit\Image Files\inHabit Logo.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   inkscape:version="1.1 (c68e22c387, 2021-05-23)"
+   sodipodi:docname="inHabit Logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:snap-bbox="true"
+     inkscape:snap-global="true"
+     inkscape:bbox-paths="true"
+     inkscape:snap-bbox-edge-midpoints="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:zoom="0.23716796"
+     inkscape:cx="546.02654"
+     inkscape:cy="301.47411"
+     inkscape:window-width="1280"
+     inkscape:window-height="729"
+     inkscape:window-x="967"
+     inkscape:window-y="1072"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4634">
+      <stop
+         style="stop-color:#10b981;stop-opacity:1"
+         offset="0"
+         id="stop4630" />
+      <stop
+         style="stop-color:#06b6d4;stop-opacity:1"
+         offset="1"
+         id="stop4632" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4634"
+       id="linearGradient4636"
+       x1="74.438156"
+       y1="165.99118"
+       x2="93.166504"
+       y2="127.39845"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.40055646,0,0,0.40055646,-7.2627629,-29.811879)" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="path920"
+       style="fill:url(#linearGradient4636);fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 27.968738,22.760025 h -8.004846 v -7.627822 c -3.434622,1.897743 -6.245126,3.876867 -9.716057,5.70784 v 0.406327 c 0.0058,-2.08e-4 0.01159,-2.97e-4 0.01739,-4.3e-4 0.818283,4.7e-5 1.504192,0.618482 1.588674,1.432393 v 17.713208 h 8.110066 l -7e-5,-13.404341 h 8.004846 l 0.105289,13.404341 h 8.110067 v -17.71319 c 0.08448,-0.813911 0.770391,-1.432346 1.588675,-1.432393 0.0058,1.06e-4 0.01159,2.07e-4 0.01739,4.3e-4 v -0.406334 l -9.821416,-5.717983 z"
+       sodipodi:nodetypes="ccccccccccccccccccc"
+       inkscape:export-filename="C:\Users\SamuelKingstonNichol\Strype\Nicholson Shared Files - SK Share\App Development\inHabit\Image Files\inHabit Logo lo-res.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+  </g>
+</svg>

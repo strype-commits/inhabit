@@ -141,3 +141,10 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Firebase debug logs
+firebase-debug.log*
+firebase-debug.*.log*
+
+# dataconnect generated files
+.dataconnect
