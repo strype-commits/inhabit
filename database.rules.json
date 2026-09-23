@@ -1,6 +1,7 @@
 {
   "rules": {
     "users": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)",
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true))",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true) || (auth != null && auth.uid === $uid && !data.exists() && newData.child('role').val() === 'user' && !newData.child('isDeveloper').exists() && !newData.child('sensors').exists())",

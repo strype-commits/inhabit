@@ -55,11 +55,12 @@ const ui = useUiStore()
 const router = useRouter()
 const { canInstall, install } = useInstallPrompt()
 
-const navItems = [
+const navItems = computed(() => [
   { label: 'Dashboard', to: '/' },
+  ...(auth.isAdmin ? [{ label: 'Admin', to: '/admin' }] : []),
   { label: 'Settings', to: '/settings' },
   { label: "What's new", to: '/changelog' }
-]
+])
 
 const initial = computed(() => (auth.displayName || '?').charAt(0).toUpperCase())
 

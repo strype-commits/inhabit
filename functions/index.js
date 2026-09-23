@@ -7,6 +7,8 @@ import { getDatabase } from 'firebase-admin/database'
 initializeApp()
 
 const DELETE_BATCH = 500
+// Used when a sensor has no retentionDays of its own. Keep in step with src/utils/sensorConfig.js.
+const DEFAULT_RETENTION_DAYS = 365
 
 // Delete history keys at or before `cutoffKey`, in batches, returning how many were removed.
 async function pruneSensorHistory(db, sensorId, cutoffKey) {
@@ -24,8 +26,7 @@ async function pruneSensorHistory(db, sensorId, cutoffKey) {
   return removed
 }
 
-// Daily: for each sensor with `retentionDays` set, delete history older than that.
-// Sensors without `retentionDays` keep all their history.
+// Daily: delete history older than each sensor's `retentionDays` (default DEFAULT_RETENTION_DAYS).
 export const pruneSensorHistoryDaily = onSchedule(
   { schedule: 'every day 03:00', timeZone: 'Europe/London', region: 'europe-west1' },
   async () => {
@@ -33,8 +34,8 @@ export const pruneSensorHistoryDaily = onSchedule(
     const sensors = (await db.ref('sensors').once('value')).val() || {}
 
     for (const [sensorId, sensor] of Object.entries(sensors)) {
-      const days = Number(sensor?.retentionDays)
-      if (!Number.isFinite(days) || days < 1) continue
+      const own = Number(sensor?.retentionDays)
+      const days = Number.isFinite(own) && own >= 1 ? own : DEFAULT_RETENTION_DAYS
 
       try {
         // Keys are Unix timestamps; detect seconds vs milliseconds from the newest key.

@@ -4,12 +4,14 @@
 //   expectedFrequencyMinutes  how often a reading should arrive, used when there's no nextUpdate
 //                             (neither → staleness not checked)
 //   staleAfterMultiplier      stale once silent for the reporting interval × this (default 2)
-//   retentionDays             days of history to keep; older readings are pruned
-//                             (no value → history kept indefinitely, graph shows GRAPH_DEFAULT_DAYS)
+//   retentionDays             days of history to keep; older readings are pruned daily
+//                             (no value → DEFAULT_RETENTION_DAYS; graph shows GRAPH_DEFAULT_DAYS)
 //   showHistory               false hides the graph, e.g. for on/off sensors (default true)
 import { timestampToDate } from './formatters'
 
 export const GRAPH_DEFAULT_DAYS = 30
+// Keep in step with functions/index.js.
+export const DEFAULT_RETENTION_DAYS = 365
 
 export const PARAM_DEFAULTS = {
   expectedFrequencyMinutes: null,

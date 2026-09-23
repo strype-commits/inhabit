@@ -16,7 +16,7 @@
       <dt>Stale after</dt>
       <dd>{{ staleText }}</dd>
       <dt>History kept for</dt>
-      <dd>{{ current.retentionDays ? `${current.retentionDays} days` : 'Kept indefinitely' }}</dd>
+      <dd>{{ current.retentionDays ? `${current.retentionDays} days` : `${DEFAULT_RETENTION_DAYS} days (default)` }}</dd>
       <dt>History graph</dt>
       <dd>{{ current.showHistory ? 'Shown' : 'Hidden' }}</dd>
     </dl>
@@ -50,8 +50,8 @@
         <div class="form-group">
           <label class="form-label" :for="`ret-${id}`">Keep history for (days)</label>
           <input :id="`ret-${id}`" v-model="form.retentionDays" class="form-input"
-                 type="number" inputmode="numeric" min="1" max="3650" step="1" placeholder="Keep all" />
-          <span class="form-hint">Older readings are deleted daily. Leave blank to keep everything.</span>
+                 type="number" inputmode="numeric" min="1" max="3650" step="1" :placeholder="`${DEFAULT_RETENTION_DAYS} (default)`" />
+          <span class="form-hint">Older readings are deleted daily. Leave blank for the default.</span>
         </div>
       </div>
 
@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { sensorParams, deviceIntervalMinutes, formatDuration } from '@/utils/sensorConfig'
+import { sensorParams, deviceIntervalMinutes, formatDuration, DEFAULT_RETENTION_DAYS } from '@/utils/sensorConfig'
 import { primaryVariableKey } from '@/utils/formatters'
 import { updateSensorParameters } from '@/services/sensors'
 import { useToastStore } from '@/stores/toast'

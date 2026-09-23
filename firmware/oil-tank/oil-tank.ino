@@ -3,7 +3,7 @@
 #include <InhabitDevice.h>
 #include "secrets.h"
 
-#define FW_VERSION "1.0.2"
+#define FW_VERSION "1.0.3"
 
 // ===== Pins =====
 #define TRIG_PIN 27
@@ -12,12 +12,13 @@
 #define LED_GREEN 14
 #define LED_RED 4
 
-// ===== Tank geometry (horizontal cylinder) =====
-const float SENSOR_HEIGHT_CM = 120.0;    // sensor face to tank bottom (calibrate from an empty tank)
+// ===== Tank calibration =====
+// The tank isn't a true cylinder (ribs, non-planar ends), so volume uses a horizontal-cylinder
+// fill curve scaled between the measured empty level and nominal capacity.
+const float SENSOR_HEIGHT_CM = 97.5;     // sensor face to the run-out level, measured on an empty tank (Sep 2026)
+const float TANK_CAPACITY_L = 2000.0;    // nominal volume with oil up to the sensor
 const float MIN_RELIABLE_CM = 10.0;      // ultrasonic readings closer than this are unreliable
 const float MAX_RANGE_CM = 200.0;        // generous, so an empty tank still reports its true distance
-const float TANK_DIAMETER_MM = 1200.0;
-const float TANK_LENGTH_MM = 1787.0;
 
 // ===== Reporting (contract §5) =====
 const uint32_t REPORT_INTERVAL_S = 4UL * 3600UL;               // scheduled report every 4 h
@@ -107,15 +108,15 @@ float measureDistanceCm() {
 }
 
 float depthFromDistance(float distanceCm) {
-  return constrain(SENSOR_HEIGHT_CM - distanceCm, 0.0, TANK_DIAMETER_MM / 10.0);
+  return constrain(SENSOR_HEIGHT_CM - distanceCm, 0.0, SENSOR_HEIGHT_CM);
 }
 
-// Litres in a horizontal cylinder filled to depthCm.
+// Litres at depthCm: the filled fraction of a circular cross-section, (θ − sin θ) / 2π,
+// scaled so 0 cm = empty and SENSOR_HEIGHT_CM = TANK_CAPACITY_L.
 float litresFromDepth(float depthCm) {
-  float h = constrain(depthCm * 10.0, 0.0, TANK_DIAMETER_MM);
-  float r = TANK_DIAMETER_MM / 2.0;
-  float area = r * r * acos((r - h) / r) - (r - h) * sqrt(2 * r * h - h * h);
-  return area * TANK_LENGTH_MM / 1e6;
+  float f = constrain(depthCm / SENSOR_HEIGHT_CM, 0.0, 1.0);
+  float theta = 2.0 * acos(1.0 - 2.0 * f);
+  return TANK_CAPACITY_L * (theta - sin(theta)) / (2.0 * PI);
 }
 
 // ===== Reporting =====

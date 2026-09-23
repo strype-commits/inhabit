@@ -157,3 +157,6 @@ firmware/**/build/
 firmware/public/**/*.bin
 # Flash backups contain embedded WiFi/Firebase secrets
 firmware/**/*.bin
+
+# Local data backups taken before cleanups
+backups/

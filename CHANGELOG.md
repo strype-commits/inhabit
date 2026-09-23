@@ -8,6 +8,13 @@ The in-app, plain-language version lives in `public/changelog.json`.
 _On dev. Not yet in production._
 
 ### Added
+- Admin panel (`/admin`, admins only): Users tab (role counts, search, user/admin role, per-user
+  sensor access) and Sensors tab (status, last report, firmware vs latest published, signal,
+  "Update firmware now" → `commands/{id}/checkUpdate`). Rules: admins may list `users`.
+- "Displayed value" (`primaryVariable`) selector in Sensor parameters; automatic choice now
+  prefers the variable named after `units`.
+- Sensor detail shows firmware, WiFi signal and last restart.
+- Pruning deployed: `pruneSensorHistoryDaily` with a 365-day default retention.
 - Staleness uses the device-declared interval (`nextUpdate − epoch`) when present, else `expectedFrequencyMinutes`;
   "Next expected" (with overdue flag) on Sensor Detail. Reads `units`, `epoch` and optional `primaryVariable`.
 - Staleness per sensor from metadata (`expectedFrequencyMinutes` × `staleAfterMultiplier`, default 2):

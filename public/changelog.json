@@ -5,6 +5,18 @@
     "changes": [
       {
         "type": "feature",
+        "text": "Admin page: manage who can see which sensors, and check or update each device's firmware."
+      },
+      {
+        "type": "feature",
+        "text": "History older than a year is tidied away automatically each night."
+      },
+      {
+        "type": "fix",
+        "text": "The oil tank now shows litres rather than oil depth."
+      },
+      {
+        "type": "feature",
         "text": "Each sensor card shows when it last reported, and flags sensors that have gone quiet as \"Stale\"."
       },
       {
