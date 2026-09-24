@@ -147,10 +147,11 @@ const staleText = computed(() => {
   return `Stale after ${formatDuration(freq * mult)} without a reading`
 })
 
-// Ticked graph variables in colour-slot order (so the saved list is stable).
+// Ticked graph variables: previously saved ones keep their order (and colours), new ones follow.
 function orderedGraphSelection() {
   const chosen = new Set(form.graphVariables || [])
-  return allKeys.value.filter((k) => chosen.has(k))
+  const kept = savedGraphKeys.value.filter((k) => chosen.has(k))
+  return [...kept, ...allKeys.value.filter((k) => chosen.has(k) && !kept.includes(k))]
 }
 
 async function save() {

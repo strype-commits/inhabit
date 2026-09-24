@@ -57,7 +57,7 @@
       <p v-if="!chartSeries.some((s) => s.points.length)" class="text-muted">
         No readings in the last {{ selectedRange.label.toLowerCase() }}.
       </p>
-      <SensorChart v-else :series="chartSeries" :unit="unit" :x-min="windowStartMs" :x-max="windowEndMs" />
+      <SensorChart v-else :series="chartSeries" :unit="axisUnit" :x-min="windowStartMs" :x-max="windowEndMs" />
       <p v-if="windowTruncated" class="form-hint">Showing the most recent {{ MAX_CHART_POINTS }} readings.</p>
     </section>
 
@@ -210,6 +210,19 @@ watch(
 // Variables to plot (sensor's graphVariables, default the primary), each with a fixed colour.
 const graphKeys = computed(() => graphVariableKeys(sensor.value))
 
+// Units per variable: explicit variableUnits, else the sensor's units for the primary; sensors
+// without variableUnits (e.g. the loft) share their units across every graphed variable.
+function keyUnit(key) {
+  const own = variableUnit(sensor.value, key)
+  if (own) return own
+  return !sensor.value?.variableUnits && graphKeys.value.includes(key) ? unit.value : ''
+}
+// One axis: labelled with the units only if every plotted series shares them.
+const axisUnit = computed(() => {
+  const units = new Set(graphKeys.value.map(keyUnit))
+  return units.size === 1 ? [...units][0] : ''
+})
+
 const chartSeries = computed(() => {
   const entries = Object.entries(windowHistory.value)
     .map(([ts, entry]) => [timestampToDate(ts)?.getTime(), entry])
@@ -249,10 +262,9 @@ const stale = computed(() => staleness(sensor.value, lastDate.value, now.value))
 const otherVariables = computed(() =>
   Object.entries(sensor.value?.variables || {})
     .filter(([key]) => key !== primaryKey.value)
-    // Graphed variables share the sensor's axis units; others need variableUnits.
     .map(([key, value]) => ({
       key,
-      value: formatValue(value, variableUnit(sensor.value, key) || (graphKeys.value.includes(key) ? unit.value : ''))
+      value: formatValue(value, keyUnit(key))
     })))
 
 // Newest first, with the gap since the previous reading. Gaps beyond the stale
@@ -263,7 +275,7 @@ const readings = computed(() => {
     .map(([ts, entry]) => ({
       ts,
       date: timestampToDate(ts),
-      values: graphKeys.value.map((k) => formatValue(historyEntryValue(entry, k), unit.value))
+      values: graphKeys.value.map((k) => formatValue(historyEntryValue(entry, k), keyUnit(k)))
     }))
     .sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0))
   return rows

@@ -94,26 +94,27 @@ export function formatDuration(minutes) {
   return `${Number((minutes / 1440).toFixed(1))} days`
 }
 
-// Every variable the sensor reports, primary first then alphabetical. A variable's position
-// here is its colour slot, so colours stay put whichever subset is plotted.
+// Every variable the sensor reports, primary first then alphabetical.
 export function orderedVariableKeys(sensor) {
   const primary = primaryVariableKey(sensor)
   const rest = Object.keys(sensor?.variables || {}).filter((k) => k !== primary).sort()
   return primary ? [primary, ...rest] : rest
 }
 
-// Variables to plot, in colour-slot order.
+// Variables to plot, in the order chosen (graphVariables), which is also colour-slot order.
 export function graphVariableKeys(sensor) {
-  const all = orderedVariableKeys(sensor)
-  const chosen = new Set(Object.values(sensor?.graphVariables || {}))
-  const keys = all.filter((k) => chosen.has(k))
-  return keys.length ? keys : all.slice(0, 1)
+  const all = new Set(orderedVariableKeys(sensor))
+  const keys = Object.values(sensor?.graphVariables || {}).filter((k) => all.has(k))
+  return keys.length ? [...new Set(keys)] : orderedVariableKeys(sensor).slice(0, 1)
 }
 
 export const MAX_SERIES = 8
 
-// 1-based categorical colour slot for a variable (see --series-N tokens).
+// 1-based categorical colour slot for a variable (see --series-N tokens): its position among
+// the graphed variables, so up to 4 plotted series always use the validated slots 1–4.
+// Hiding a trace in the legend doesn't change this; only an admin changing the set does.
 export function colorSlot(sensor, key) {
-  const i = orderedVariableKeys(sensor).indexOf(key)
+  const graphed = graphVariableKeys(sensor)
+  const i = graphed.includes(key) ? graphed.indexOf(key) : graphed.length + orderedVariableKeys(sensor).indexOf(key)
   return i < 0 ? 1 : Math.min(i, MAX_SERIES - 1) + 1   // palette never cycles; >8 variables share slot 8
 }

@@ -18,6 +18,9 @@
         },
         "notificationPrefs": {
           ".write": "auth != null && auth.uid === $uid"
+        },
+        "fcmTokens": {
+          ".write": "auth != null && auth.uid === $uid"
         }
       }
     },
