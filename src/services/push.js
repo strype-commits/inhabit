@@ -75,6 +75,13 @@ export async function onForegroundMessage(callback) {
   }))
 }
 
+// Asks the server to email a test alert to the signed-in user.
+export async function sendTestEmail() {
+  const call = httpsCallable(getFunctions(app, 'europe-west1'), 'sendTestEmail')
+  const { data } = await call()
+  return data   // { sentTo }
+}
+
 // Asks the server to push a test notification to all of this user's devices.
 export async function sendTestPush() {
   const call = httpsCallable(getFunctions(app, 'europe-west1'), 'sendTestPush')

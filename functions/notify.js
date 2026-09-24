@@ -72,7 +72,7 @@ function isPlaceholder(key) {
   return !key || /^(placeholder|changeme|todo|x+)$/i.test(key.trim())
 }
 
-async function sendEmail(to, subject, text, link) {
+export async function sendEmail(to, subject, text, link) {
   const key = resendApiKey.value()
   if (isPlaceholder(key)) return 'skipped'
   const html = `<p>${text}</p><p><a href="${link}">Open in inHabit</a></p>

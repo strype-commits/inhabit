@@ -20,6 +20,9 @@
       <input type="checkbox" :checked="emailAlerts" :disabled="saving" @change="toggleEmail($event.target.checked)" />
       Email me alerts at {{ auth.user?.email }}
     </label>
+    <button v-if="emailAlerts" class="btn btn-secondary btn-sm test-email" :disabled="saving" @click="testEmail">
+      Send a test email
+    </button>
 
     <div class="push">
       <label class="checkbox">
@@ -48,7 +51,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useToastStore } from '@/stores/toast'
 import { setEmailAlerts } from '@/services/notifications'
-import { pushPermission, pushEnabledHere, enablePush, disablePush, sendTestPush } from '@/services/push'
+import { pushPermission, pushEnabledHere, enablePush, disablePush, sendTestPush, sendTestEmail } from '@/services/push'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -96,6 +99,18 @@ async function testPush() {
   }
 }
 
+async function testEmail() {
+  saving.value = true
+  try {
+    const { sentTo } = await sendTestEmail()
+    toast.success(`Test email sent to ${sentTo}`)
+  } catch (err) {
+    toast.error(err.message)
+  } finally {
+    saving.value = false
+  }
+}
+
 async function toggleEmail(enabled) {
   saving.value = true
   try {
@@ -120,6 +135,7 @@ async function toggleEmail(enabled) {
 .facts dt { color: var(--color-text-muted); }
 .facts dd { margin: 0; overflow-wrap: anywhere; }
 .hint { margin: 0 0 var(--space-3); font-size: var(--font-size-sm); }
+.test-email { margin-top: var(--space-3); }
 .push { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
 .push .form-hint { margin: var(--space-1) 0 var(--space-3); }
 .checkbox { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); cursor: pointer; }
