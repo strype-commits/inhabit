@@ -55,3 +55,6 @@ export const pruneSensorHistoryDaily = onSchedule(
     }
   }
 )
+
+// Sensor alerts and notifications (see alerts.js / notify.js).
+export { evaluateSensorAlerts, checkOfflineSensors } from './alerts.js'

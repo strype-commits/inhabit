@@ -160,3 +160,6 @@ firmware/**/*.bin
 
 # Local data backups taken before cleanups
 backups/
+
+# Non-secret function settings are safe to commit
+!functions/.env

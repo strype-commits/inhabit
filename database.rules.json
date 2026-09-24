@@ -15,6 +15,9 @@
         },
         "isDeveloper": {
           ".validate": "newData.val() === data.val()"
+        },
+        "notificationPrefs": {
+          ".write": "auth != null && auth.uid === $uid"
         }
       }
     },
@@ -97,6 +100,21 @@
         ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'",
         ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
       }
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$nid": {
+          ".write": "auth != null && auth.uid === $uid && data.exists() && !newData.exists()",
+          "read": {
+            ".write": "auth != null && auth.uid === $uid && data.exists()",
+            ".validate": "newData.isBoolean()"
+          }
+        }
+      }
+    },
+    "alertState": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)"
     }
   }
 }

@@ -7,6 +7,15 @@
     <div class="header-title">inHabit</div>
 
     <div class="header-right">
+      <RouterLink v-if="auth.isLoggedIn" to="/notifications" class="bell"
+                  :aria-label="unreadCount ? `Notifications, ${unreadCount} unread` : 'Notifications'">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span v-if="unreadCount" class="bell-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+      </RouterLink>
       <button
         v-if="auth.isLoggedIn"
         class="menu-button"
@@ -26,9 +35,11 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import { useNotifications } from '@/composables/useNotifications'
 
 const auth = useAuthStore()
 const ui = useUiStore()
+const { unreadCount } = useNotifications()
 </script>
 
 <style scoped>
@@ -69,7 +80,24 @@ const ui = useUiStore()
   color: var(--color-accent-3);
 }
 
-.header-right { justify-self: end; display: flex; align-items: center; }
+.header-right { justify-self: end; display: flex; align-items: center; gap: var(--space-3); }
+
+.bell { position: relative; display: flex; color: inherit; padding: var(--space-1); }
+.bell-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-critical);
+  color: var(--color-text-on-accent);
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  line-height: 18px;
+  text-align: center;
+}
 
 .menu-button {
   display: flex;

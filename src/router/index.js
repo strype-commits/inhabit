@@ -5,6 +5,7 @@ const routes = [
   { path: '/', name: 'Dashboard', component: () => import('@/pages/Dashboard.vue'), meta: { requiresAuth: true } },
   { path: '/sensor/:id', name: 'SensorDetail', component: () => import('@/pages/SensorDetail.vue'), props: true, meta: { requiresAuth: true } },
   { path: '/settings', name: 'Settings', component: () => import('@/pages/Settings.vue'), meta: { requiresAuth: true } },
+  { path: '/notifications', name: 'Notifications', component: () => import('@/pages/Notifications.vue'), meta: { requiresAuth: true } },
   { path: '/admin', name: 'Admin', component: () => import('@/pages/Admin.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/changelog', name: 'Changelog', component: () => import('@/pages/Changelog.vue') },
   { path: '/login', name: 'Login', component: () => import('@/pages/Login.vue'), meta: { guestOnly: true } },

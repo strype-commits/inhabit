@@ -81,6 +81,7 @@
       </table>
     </section>
 
+    <SensorAlerts :id="id" :sensor="sensor" :editable="auth.isAdmin" />
     <SensorParameters :id="id" :sensor="sensor" :editable="auth.isAdmin" />
   </template>
 </template>
@@ -90,12 +91,13 @@ import { ref, computed, watch, onUnmounted } from 'vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import SensorChart from '@/components/SensorChart.vue'
 import SensorParameters from '@/components/SensorParameters.vue'
+import SensorAlerts from '@/components/SensorAlerts.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNow } from '@/composables/useNow'
 import { subscribeSensor, subscribeRecentHistory, subscribeHistorySince } from '@/services/sensors'
 import {
   primaryVariableKey, sensorUnit, formatValue, formatSensorValue,
-  historyEntryValue, timestampToDate, formatDateTime, formatRelativeTime, humanizeKey
+  historyEntryValue, timestampToDate, formatDateTime, formatRelativeTime, humanizeKey, variableUnit
 } from '@/utils/formatters'
 import {
   sensorParams, lastUpdatedDate, nextExpectedDate, staleness, formatDuration,
@@ -105,7 +107,7 @@ import { downsample } from '@/utils/downsample'
 
 const RECENT_READINGS = 12
 const MAX_CHART_POINTS = 20000   // readings fetched for the graph window
-const MAX_PLOTTED_POINTS = 400   // averaged down to this many for drawing
+const MAX_PLOTTED_POINTS = 8000  // per series; above this, averaged for drawing (only legacy minute-level data)
 const CHART_RANGES = [
   { id: '24h', label: 'Day', days: 1 },
   { id: '7d', label: 'Week', days: 7 },
@@ -247,7 +249,11 @@ const stale = computed(() => staleness(sensor.value, lastDate.value, now.value))
 const otherVariables = computed(() =>
   Object.entries(sensor.value?.variables || {})
     .filter(([key]) => key !== primaryKey.value)
-    .map(([key, value]) => ({ key, value: formatValue(value) })))
+    // Graphed variables share the sensor's axis units; others need variableUnits.
+    .map(([key, value]) => ({
+      key,
+      value: formatValue(value, variableUnit(sensor.value, key) || (graphKeys.value.includes(key) ? unit.value : ''))
+    })))
 
 // Newest first, with the gap since the previous reading. Gaps beyond the stale
 // threshold are highlighted so missed readings stand out.

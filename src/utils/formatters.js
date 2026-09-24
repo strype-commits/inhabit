@@ -82,3 +82,11 @@ export function humanizeKey(key) {
   const words = String(key).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').toLowerCase()
   return words.charAt(0).toUpperCase() + words.slice(1)
 }
+
+// Units for one variable: an explicit variableUnits entry, else the sensor's units for the
+// primary variable. Other variables have no units unless the caller knows they share them.
+export function variableUnit(sensor, key) {
+  const own = sensor?.variableUnits?.[key]
+  if (own) return own
+  return key === primaryVariableKey(sensor) ? sensorUnit(sensor, key) : ''
+}
