@@ -5,11 +5,10 @@
 //                             (neither → staleness not checked)
 //   staleAfterMultiplier      stale once silent for the reporting interval × this (default 2)
 //   retentionDays             days of history to keep; older readings are pruned daily
-//                             (no value → DEFAULT_RETENTION_DAYS; graph shows GRAPH_DEFAULT_DAYS)
+//                             (no value → DEFAULT_RETENTION_DAYS)
 //   showHistory               false hides the graph, e.g. for on/off sensors (default true)
 import { timestampToDate } from './formatters'
 
-export const GRAPH_DEFAULT_DAYS = 30
 // Keep in step with functions/index.js.
 export const DEFAULT_RETENTION_DAYS = 365
 
@@ -33,11 +32,6 @@ export function sensorParams(sensor) {
     retentionDays: positiveNumber(sensor?.retentionDays),
     showHistory: sensor?.showHistory !== false
   }
-}
-
-// Days of history the graph covers.
-export function graphDays(params) {
-  return params.retentionDays ?? GRAPH_DEFAULT_DAYS
 }
 
 // Timestamp fields a device might write on the sensor node itself.

@@ -19,7 +19,9 @@ Chart.register(LineController, LineElement, PointElement, LinearScale, Tooltip, 
 const props = defineProps({
   points: { type: Array, required: true }, // [{ x: epochMs, y: number }]
   label: { type: String, default: 'Value' },
-  unit: { type: String, default: '' }
+  unit: { type: String, default: '' },
+  xMin: { type: Number, default: null },   // epoch ms; axis spans the full window even if data is sparse
+  xMax: { type: Number, default: null }
 })
 
 const canvas = ref(null)
@@ -44,7 +46,9 @@ function build() {
   const muted = token('--color-text-muted')
   const grid = token('--color-border')
   const xs = props.points.map((p) => p.x)
-  const span = xs.length ? Math.max(...xs) - Math.min(...xs) : 0
+  const lo = props.xMin ?? (xs.length ? Math.min(...xs) : 0)
+  const hi = props.xMax ?? (xs.length ? Math.max(...xs) : 0)
+  const span = hi - lo
 
   chart = new Chart(canvas.value, {
     type: 'line',
@@ -70,6 +74,8 @@ function build() {
       scales: {
         x: {
           type: 'linear',
+          min: props.xMin ?? undefined,
+          max: props.xMax ?? undefined,
           ticks: { color: muted, maxTicksLimit: 6, callback: (v) => tickLabel(v, span) },
           grid: { color: grid }
         },
@@ -95,7 +101,7 @@ onMounted(build)
 onBeforeUnmount(() => chart?.destroy())
 // Rebuild rather than update: tick format depends on the span of the data,
 // and readings arrive every few minutes at most.
-watch(() => [props.points, props.unit, props.label], build)
+watch(() => [props.points, props.unit, props.label, props.xMin, props.xMax], build)
 // Colours come from CSS tokens, so rebuild when the theme flips.
 watch(() => ui.theme, () => requestAnimationFrame(build))
 </script>

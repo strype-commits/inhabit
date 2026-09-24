@@ -45,12 +45,18 @@
     </section>
 
     <section v-if="params.showHistory" class="card">
-      <h2 class="card-title">
-        History
-        <span class="text-muted subtitle">last {{ graphDays(params) }} days</span>
-      </h2>
-      <p v-if="!chartPoints.length" class="text-muted">No numeric history to plot yet.</p>
-      <SensorChart v-else :points="chartPoints" :label="primaryKey || 'Value'" :unit="unit" />
+      <div class="history-head">
+        <h2 class="card-title">History</h2>
+        <div class="range-picker" role="group" aria-label="Graph time range">
+          <button v-for="r in CHART_RANGES" :key="r.id" type="button" class="range-btn"
+                  :class="{ active: rangeId === r.id }" :aria-pressed="rangeId === r.id" @click="setRange(r.id)">
+            {{ r.label }}
+          </button>
+        </div>
+      </div>
+      <p v-if="!chartPoints.length" class="text-muted">No readings in the last {{ selectedRange.label.toLowerCase() }}.</p>
+      <SensorChart v-else :points="chartPoints" :label="primaryKey || 'Value'" :unit="unit"
+                   :x-min="windowStartMs" :x-max="windowEndMs" />
       <p v-if="windowTruncated" class="form-hint">Showing the most recent {{ MAX_CHART_POINTS }} readings.</p>
     </section>
 
@@ -88,11 +94,19 @@ import {
   historyEntryValue, timestampToDate, formatDateTime, formatRelativeTime
 } from '@/utils/formatters'
 import {
-  sensorParams, graphDays, lastUpdatedDate, nextExpectedDate, staleness, formatDuration
+  sensorParams, lastUpdatedDate, nextExpectedDate, staleness, formatDuration
 } from '@/utils/sensorConfig'
+import { downsample } from '@/utils/downsample'
 
 const RECENT_READINGS = 12
-const MAX_CHART_POINTS = 5000
+const MAX_CHART_POINTS = 20000   // readings fetched for the graph window
+const MAX_PLOTTED_POINTS = 400   // averaged down to this many for drawing
+const CHART_RANGES = [
+  { id: '24h', label: 'Day', days: 1 },
+  { id: '7d', label: 'Week', days: 7 },
+  { id: '30d', label: 'Month', days: 30 },
+  { id: '1y', label: 'Year', days: 365 }
+]
 
 const props = defineProps({
   id: { type: String, required: true }
@@ -147,27 +161,52 @@ const headline = computed(() => formatSensorValue(sensor.value))
 const newestKey = computed(() => Object.keys(recent.value).sort().at(-1) ?? null)
 const keysInMs = computed(() => Number(newestKey.value) > 1e12)
 
-// Graph window: retentionDays back from now. Subscribed once we know the key units,
-// and re-subscribed only when the window length or units change.
+// Graph time range, remembered per browser.
+const RANGE_KEY = 'inhabit:chartRange'
+const rangeId = ref(readStoredRange())
+const selectedRange = computed(() => CHART_RANGES.find((r) => r.id === rangeId.value) ?? CHART_RANGES[1])
+
+function readStoredRange() {
+  try {
+    const stored = localStorage.getItem(RANGE_KEY)
+    return CHART_RANGES.some((r) => r.id === stored) ? stored : '7d'
+  } catch { return '7d' }
+}
+
+function setRange(id) {
+  rangeId.value = id
+  try { localStorage.setItem(RANGE_KEY, id) } catch { /* private mode */ }
+}
+
+// Graph window: the selected range back from now. Subscribed once we know the key units,
+// and re-subscribed only when the range or units change.
+const windowStartMs = ref(null)
+const windowEndMs = ref(null)
 watch(
-  () => [props.id, params.value.showHistory, graphDays(params.value), newestKey.value !== null, keysInMs.value],
+  () => [props.id, params.value.showHistory, selectedRange.value.days, newestKey.value !== null, keysInMs.value],
   ([id, show, days, haveKeys, ms], old) => {
     if (old && old[0] === id && old[1] === show && old[2] === days && old[3] === haveKeys && old[4] === ms) return
     unsubWindow?.()
     unsubWindow = null
     windowHistory.value = {}
     if (!show || !haveKeys || notFound.value) return
-    const cutoffMs = Date.now() - days * 86400000
-    const startKey = ms ? cutoffMs : Math.floor(cutoffMs / 1000)
-    unsubWindow = subscribeHistorySince(id, startKey, MAX_CHART_POINTS, (h) => { windowHistory.value = h }, () => {})
+    windowEndMs.value = Date.now()
+    windowStartMs.value = windowEndMs.value - days * 86400000
+    const startKey = ms ? windowStartMs.value : Math.floor(windowStartMs.value / 1000)
+    unsubWindow = subscribeHistorySince(id, startKey, MAX_CHART_POINTS, (h) => {
+      windowHistory.value = h
+      windowEndMs.value = Math.max(Date.now(), windowEndMs.value)
+    }, () => {})
   }
 )
 
 const chartPoints = computed(() =>
-  Object.entries(windowHistory.value)
-    .map(([ts, entry]) => ({ x: timestampToDate(ts)?.getTime(), y: Number(historyEntryValue(entry, primaryKey.value)) }))
-    .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y))
-    .sort((a, b) => a.x - b.x))
+  downsample(
+    Object.entries(windowHistory.value)
+      .map(([ts, entry]) => ({ x: timestampToDate(ts)?.getTime(), y: Number(historyEntryValue(entry, primaryKey.value)) }))
+      .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y))
+      .sort((a, b) => a.x - b.x),
+    MAX_PLOTTED_POINTS))
 const windowTruncated = computed(() => Object.keys(windowHistory.value).length >= MAX_CHART_POINTS)
 
 const lastDate = computed(() => lastUpdatedDate(sensor.value, newestKey.value))
@@ -232,7 +271,32 @@ const readings = computed(() => {
   font-weight: var(--font-weight-semibold);
 }
 
-.subtitle { font-size: var(--font-size-sm); font-weight: var(--font-weight-regular); margin-left: var(--space-2); }
+.history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.history-head .card-title { margin: 0; }
+.range-picker {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.range-btn {
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.range-btn + .range-btn { border-left: 1px solid var(--color-border); }
+.range-btn.active { background: var(--color-accent-1); color: var(--color-text-on-accent); }
 
 .facts {
   display: grid;
