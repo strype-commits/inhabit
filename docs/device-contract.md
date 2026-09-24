@@ -99,7 +99,7 @@ Report on a schedule **and** on meaningful change, never every loop:
 | Sensor | Schedule | Also report when |
 |---|---|---|
 | `0158-oil-volume` (`litres`, `depthCm`) | every 4 h | level changes ≥ 20 L since last report (checked every 5 min); button press |
-| `loftSensor` (`pipeTemp`, `loftTemp`, `annexeTemp`, `enclosureTemp`) | by lowest probe: < 3 °C every 15 min, < 8 °C hourly, else 3 h (0.5 °C hysteresis) | measured every minute; immediately on a zone change confirmed by two consecutive measurements |
+| `loftSensor` (`pipeTemp`, `loftTemp`, `annexeTemp`, `enclosureTemp`) | by lowest probe: < 3 °C every 15 min, < 8 °C hourly, else 8 h (0.5 °C hysteresis) | measured every minute; immediately on a zone change confirmed by two consecutive measurements |
 
 Write budget: at most ~100 writes/day per device. A 1-minute interval (≈ 2,900 writes/day)
 is out of contract.

@@ -18,7 +18,7 @@
       <dt>History kept for</dt>
       <dd>{{ current.retentionDays ? `${current.retentionDays} days` : `${DEFAULT_RETENTION_DAYS} days (default)` }}</dd>
       <dt>History graph</dt>
-      <dd>{{ current.showHistory ? 'Shown' : 'Hidden' }}</dd>
+      <dd>{{ current.showHistory ? savedGraphKeys.map(humanizeKey).join(', ') : 'Hidden' }}</dd>
     </dl>
 
     <!-- Admin edit form -->
@@ -60,6 +60,16 @@
         Show history graph
       </label>
 
+      <fieldset v-if="form.showHistory && allKeys.length > 1" class="graph-vars">
+        <legend class="form-label">Graph shows</legend>
+        <label v-for="k in allKeys" :key="k" class="checkbox">
+          <input v-model="form.graphVariables" type="checkbox" :value="k" />
+          <span class="swatch" :style="{ background: `var(--series-${colorSlot(sensor, k)})` }" aria-hidden="true" />
+          {{ humanizeKey(k) }}
+        </label>
+        <span class="form-hint">Plotted together on one axis in the sensor's units — pick readings that share them.</span>
+      </fieldset>
+
       <p v-if="error" class="form-error">{{ error }}</p>
 
       <div class="actions">
@@ -74,8 +84,11 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { sensorParams, deviceIntervalMinutes, formatDuration, DEFAULT_RETENTION_DAYS } from '@/utils/sensorConfig'
-import { primaryVariableKey } from '@/utils/formatters'
+import {
+  sensorParams, deviceIntervalMinutes, formatDuration, DEFAULT_RETENTION_DAYS,
+  orderedVariableKeys, graphVariableKeys, colorSlot
+} from '@/utils/sensorConfig'
+import { primaryVariableKey, humanizeKey } from '@/utils/formatters'
 import { updateSensorParameters } from '@/services/sensors'
 import { useToastStore } from '@/stores/toast'
 
@@ -93,6 +106,8 @@ const displayedKey = computed(() => primaryVariableKey(props.sensor))
 // What "Automatic" would pick if primaryVariable were cleared.
 const autoKey = computed(() => primaryVariableKey({ ...props.sensor, primaryVariable: undefined }))
 const savedPrimary = computed(() => props.sensor?.primaryVariable ?? '')
+const allKeys = computed(() => orderedVariableKeys(props.sensor))
+const savedGraphKeys = computed(() => graphVariableKeys(props.sensor))
 
 const form = reactive({})
 const busy = ref(false)
@@ -101,6 +116,7 @@ const error = ref('')
 function reset() {
   const p = current.value
   form.primaryVariable = savedPrimary.value
+  form.graphVariables = [...savedGraphKeys.value]
   form.expectedFrequencyMinutes = p.expectedFrequencyMinutes ?? ''
   form.staleAfterMultiplier = p.staleAfterMultiplier
   form.retentionDays = p.retentionDays ?? ''
@@ -110,6 +126,7 @@ function reset() {
 const dirty = computed(() => {
   const p = current.value
   return form.primaryVariable !== savedPrimary.value
+    || orderedGraphSelection().join() !== savedGraphKeys.value.join()
     || String(form.expectedFrequencyMinutes ?? '') !== String(p.expectedFrequencyMinutes ?? '')
     || Number(form.staleAfterMultiplier) !== p.staleAfterMultiplier
     || String(form.retentionDays ?? '') !== String(p.retentionDays ?? '')
@@ -118,7 +135,7 @@ const dirty = computed(() => {
 
 reset()
 // Pick up changes made elsewhere, unless mid-edit.
-watch(() => [current.value, savedPrimary.value], (next, prev) => {
+watch(() => [current.value, savedPrimary.value, savedGraphKeys.value], (next, prev) => {
   if (JSON.stringify(next) !== JSON.stringify(prev) && !busy.value) reset()
 })
 
@@ -129,6 +146,12 @@ const staleText = computed(() => {
   if (!freq || !mult) return 'Staleness not checked'
   return `Stale after ${formatDuration(freq * mult)} without a reading`
 })
+
+// Ticked graph variables in colour-slot order (so the saved list is stable).
+function orderedGraphSelection() {
+  const chosen = new Set(form.graphVariables || [])
+  return allKeys.value.filter((k) => chosen.has(k))
+}
 
 async function save() {
   error.value = ''
@@ -144,6 +167,7 @@ async function save() {
   try {
     await updateSensorParameters(props.id, {
       primaryVariable: form.primaryVariable || null, // null → automatic
+      graphVariables: orderedGraphSelection(),
       expectedFrequencyMinutes: freq, // null removes the field
       staleAfterMultiplier: mult,
       retentionDays: days, // null removes the field
@@ -185,6 +209,16 @@ async function save() {
   cursor: pointer;
 }
 .checkbox input { width: 18px; height: 18px; accent-color: var(--color-accent-1); }
+
+.graph-vars {
+  border: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.swatch { width: 12px; height: 12px; border-radius: var(--radius-sm); flex: none; }
 
 .actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-4); }
 </style>

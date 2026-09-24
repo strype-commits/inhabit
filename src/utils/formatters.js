@@ -75,3 +75,10 @@ export function formatRelativeTime(date, now = new Date()) {
   const days = Math.round(hours / 24)
   return `${days} day${days === 1 ? '' : 's'} ago`
 }
+
+// "pipeTemp" → "Pipe temp", "depthCm" → "Depth cm", "litres" → "Litres"
+export function humanizeKey(key) {
+  if (!key) return ''
+  const words = String(key).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}

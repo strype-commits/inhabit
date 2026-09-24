@@ -39,7 +39,7 @@
       <h2 class="card-title">Other values</h2>
       <dl class="facts">
         <template v-for="v in otherVariables" :key="v.key">
-          <dt>{{ v.key }}</dt><dd>{{ v.value }}</dd>
+          <dt>{{ humanizeKey(v.key) }}</dt><dd>{{ v.value }}</dd>
         </template>
       </dl>
     </section>
@@ -54,9 +54,10 @@
           </button>
         </div>
       </div>
-      <p v-if="!chartPoints.length" class="text-muted">No readings in the last {{ selectedRange.label.toLowerCase() }}.</p>
-      <SensorChart v-else :points="chartPoints" :label="primaryKey || 'Value'" :unit="unit"
-                   :x-min="windowStartMs" :x-max="windowEndMs" />
+      <p v-if="!chartSeries.some((s) => s.points.length)" class="text-muted">
+        No readings in the last {{ selectedRange.label.toLowerCase() }}.
+      </p>
+      <SensorChart v-else :series="chartSeries" :unit="unit" :x-min="windowStartMs" :x-max="windowEndMs" />
       <p v-if="windowTruncated" class="form-hint">Showing the most recent {{ MAX_CHART_POINTS }} readings.</p>
     </section>
 
@@ -65,13 +66,16 @@
       <p v-if="!readings.length" class="text-muted">No history recorded yet.</p>
       <table v-else class="readings">
         <thead>
-          <tr><th>Time</th><th>Interval</th><th>Value</th></tr>
+          <tr>
+            <th>Time</th><th>Interval</th>
+            <th v-for="k in graphKeys" :key="k">{{ graphKeys.length > 1 ? humanizeKey(k) : 'Value' }}</th>
+          </tr>
         </thead>
         <tbody>
           <tr v-for="r in readings" :key="r.ts">
             <td :title="r.date?.toISOString()">{{ formatDateTime(r.date) }}</td>
             <td class="text-muted" :class="{ 'interval-late': r.late }">{{ r.interval }}</td>
-            <td>{{ r.value }}</td>
+            <td v-for="(v, i) in r.values" :key="graphKeys[i]">{{ v }}</td>
           </tr>
         </tbody>
       </table>
@@ -91,10 +95,11 @@ import { useNow } from '@/composables/useNow'
 import { subscribeSensor, subscribeRecentHistory, subscribeHistorySince } from '@/services/sensors'
 import {
   primaryVariableKey, sensorUnit, formatValue, formatSensorValue,
-  historyEntryValue, timestampToDate, formatDateTime, formatRelativeTime
+  historyEntryValue, timestampToDate, formatDateTime, formatRelativeTime, humanizeKey
 } from '@/utils/formatters'
 import {
-  sensorParams, lastUpdatedDate, nextExpectedDate, staleness, formatDuration
+  sensorParams, lastUpdatedDate, nextExpectedDate, staleness, formatDuration,
+  graphVariableKeys, colorSlot
 } from '@/utils/sensorConfig'
 import { downsample } from '@/utils/downsample'
 
@@ -200,13 +205,31 @@ watch(
   }
 )
 
-const chartPoints = computed(() =>
-  downsample(
-    Object.entries(windowHistory.value)
-      .map(([ts, entry]) => ({ x: timestampToDate(ts)?.getTime(), y: Number(historyEntryValue(entry, primaryKey.value)) }))
-      .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y))
-      .sort((a, b) => a.x - b.x),
-    MAX_PLOTTED_POINTS))
+// Variables to plot (sensor's graphVariables, default the primary), each with a fixed colour.
+const graphKeys = computed(() => graphVariableKeys(sensor.value))
+
+const chartSeries = computed(() => {
+  const entries = Object.entries(windowHistory.value)
+    .map(([ts, entry]) => [timestampToDate(ts)?.getTime(), entry])
+    .filter(([x]) => Number.isFinite(x))
+    .sort((a, b) => a[0] - b[0])
+  const raw = graphKeys.value.map((key) => ({
+    key,
+    points: entries
+      .map(([x, entry]) => ({ x, y: Number(historyEntryValue(entry, key)) }))
+      .filter((p) => Number.isFinite(p.y))
+  }))
+  // Average all series or none, on window-aligned buckets, so hovers line up across traces.
+  const average = raw.some((s) => s.points.length > MAX_PLOTTED_POINTS)
+  return raw.map((s) => ({
+    key: s.key,
+    label: humanizeKey(s.key),
+    colorSlot: colorSlot(sensor.value, s.key),
+    points: average
+      ? downsample(s.points, MAX_PLOTTED_POINTS, windowStartMs.value, windowEndMs.value, true)
+      : s.points
+  }))
+})
 const windowTruncated = computed(() => Object.keys(windowHistory.value).length >= MAX_CHART_POINTS)
 
 const lastDate = computed(() => lastUpdatedDate(sensor.value, newestKey.value))
@@ -234,7 +257,7 @@ const readings = computed(() => {
     .map(([ts, entry]) => ({
       ts,
       date: timestampToDate(ts),
-      value: formatValue(historyEntryValue(entry, primaryKey.value), unit.value)
+      values: graphKeys.value.map((k) => formatValue(historyEntryValue(entry, k), unit.value))
     }))
     .sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0))
   return rows

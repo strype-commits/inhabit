@@ -26,6 +26,18 @@
   --color-stale: #9CA3AF;
   --color-neutral: #6B7280;
 
+  /* Chart series — categorical, fixed order, never cycled. Graph cards are dark in both
+     themes, so these are the palette's dark-surface steps; validated (CVD + contrast)
+     against #1F2937 and #1E293B. Slots 5–8 are unvalidated here: re-run before using. */
+  --series-1: #3987e5;   /* blue */
+  --series-2: #d95926;   /* orange */
+  --series-3: #199e70;   /* aqua */
+  --series-4: #c98500;   /* amber */
+  --series-5: #d55181;   /* magenta */
+  --series-6: #008300;   /* green */
+  --series-7: #9085e9;   /* violet */
+  --series-8: #e66767;   /* red */
+
   /* Spacing scale */
   --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
   --space-4: 16px;  --space-5: 20px;  --space-6: 24px;

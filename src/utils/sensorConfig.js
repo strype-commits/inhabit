@@ -7,7 +7,9 @@
 //   retentionDays             days of history to keep; older readings are pruned daily
 //                             (no value → DEFAULT_RETENTION_DAYS)
 //   showHistory               false hides the graph, e.g. for on/off sensors (default true)
-import { timestampToDate } from './formatters'
+//   graphVariables            which variables the graph plots, e.g. ["pipeTemp", "enclosureTemp"]
+//                             (default: the primary variable only)
+import { timestampToDate, primaryVariableKey } from './formatters'
 
 // Keep in step with functions/index.js.
 export const DEFAULT_RETENTION_DAYS = 365
@@ -90,4 +92,28 @@ export function formatDuration(minutes) {
   if (minutes < 120) return `${Number(minutes.toFixed(1))} min`
   if (minutes < 2880) return `${Number((minutes / 60).toFixed(1))} hr`
   return `${Number((minutes / 1440).toFixed(1))} days`
+}
+
+// Every variable the sensor reports, primary first then alphabetical. A variable's position
+// here is its colour slot, so colours stay put whichever subset is plotted.
+export function orderedVariableKeys(sensor) {
+  const primary = primaryVariableKey(sensor)
+  const rest = Object.keys(sensor?.variables || {}).filter((k) => k !== primary).sort()
+  return primary ? [primary, ...rest] : rest
+}
+
+// Variables to plot, in colour-slot order.
+export function graphVariableKeys(sensor) {
+  const all = orderedVariableKeys(sensor)
+  const chosen = new Set(Object.values(sensor?.graphVariables || {}))
+  const keys = all.filter((k) => chosen.has(k))
+  return keys.length ? keys : all.slice(0, 1)
+}
+
+export const MAX_SERIES = 8
+
+// 1-based categorical colour slot for a variable (see --series-N tokens).
+export function colorSlot(sensor, key) {
+  const i = orderedVariableKeys(sensor).indexOf(key)
+  return i < 0 ? 1 : Math.min(i, MAX_SERIES - 1) + 1   // palette never cycles; >8 variables share slot 8
 }

@@ -36,7 +36,7 @@ struct Zone {
 const Zone ZONES[] = {
   { "danger", 3.0,     15UL * 60UL },    // < 3 °C: every 15 min
   { "watch",  8.0,     60UL * 60UL },    // < 8 °C: hourly
-  { "normal", 1000.0,  180UL * 60UL },   // otherwise: every 3 h
+  { "normal", 1000.0,  480UL * 60UL },   // otherwise: every 8 h (day/night trend)
 };
 const int ZONE_COUNT = sizeof(ZONES) / sizeof(ZONES[0]);
 const float HYSTERESIS_C = 0.5;          // must warm this far past a boundary to leave a colder zone
