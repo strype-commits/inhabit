@@ -137,30 +137,38 @@ void InhabitDevice::registerIfNeeded() {
   // Only register when we can positively see the sensor is missing; a failed read
   // must never overwrite fields the app owns.
   lastRegisterAttemptMs_ = millis();
-  String path = sensorPath() + "/name";
-  if (!Firebase.RTDB.get(&fbdo_, path.c_str())) {
+  if (!Firebase.RTDB.get(&fbdo_, sensorPath().c_str())) {
     Serial.printf("[register] check failed (retrying in 60 s): %s\n", fbdo_.errorReason().c_str());
     return;
   }
-  registered_ = true;
-  if (fbdo_.dataType() != "null") {
+
+  // Fill in only the registration fields that are missing; never overwrite app-edited values.
+  FirebaseJson existing;
+  if (fbdo_.dataType() == "json") existing = fbdo_.jsonObject();
+  FirebaseJsonData probe;
+  auto missing = [&](const char* key) {
+    existing.get(probe, key);
+    return !probe.success;
+  };
+
+  const InhabitRegistration& r = cfg_.registration;
+  const char* keys[] = { "name", "location", "owner", "type", "units", "primaryVariable" };
+  const char* values[] = { r.name, r.location, r.owner, r.type, r.units, r.primaryVariable };
+  FirebaseJson json;
+  int count = 0;
+  for (int i = 0; i < 6; i++) {
+    if (values[i] && missing(keys[i])) { json.set(keys[i], values[i]); count++; }
+  }
+
+  if (count == 0) {
+    registered_ = true;
     Serial.println("[register] sensor already registered");
     return;
   }
-
-  const InhabitRegistration& r = cfg_.registration;
-  FirebaseJson json;
-  if (r.name) json.set("name", r.name);
-  if (r.location) json.set("location", r.location);
-  if (r.owner) json.set("owner", r.owner);
-  if (r.type) json.set("type", r.type);
-  if (r.units) json.set("units", r.units);
-  if (r.primaryVariable) json.set("primaryVariable", r.primaryVariable);
-
   if (Firebase.RTDB.updateNode(&fbdo_, sensorPath().c_str(), &json)) {
-    Serial.println("[register] new sensor registered");
+    registered_ = true;
+    Serial.printf("[register] filled in %d missing field(s)\n", count);
   } else {
-    registered_ = false;
     Serial.printf("[register] failed: %s\n", fbdo_.errorReason().c_str());
   }
 }
@@ -171,7 +179,7 @@ void InhabitDevice::addDeviceFields(FirebaseJson& json) {
   if (!firstPublishDone_ && bootEpoch_) json.set("bootedAt", (int)bootEpoch_);
 }
 
-bool InhabitDevice::publish(FirebaseJson& variables, uint32_t nextUpdateEpoch) {
+bool InhabitDevice::publish(FirebaseJson& variables, uint32_t nextUpdateEpoch, const char* status) {
   uint32_t epoch = now();
   if (!epoch || !ready()) return false;
 
@@ -179,7 +187,7 @@ bool InhabitDevice::publish(FirebaseJson& variables, uint32_t nextUpdateEpoch) {
   live.set("variables", variables);
   live.set("epoch", (int)epoch);
   live.set("nextUpdate", (int)nextUpdateEpoch);
-  live.set("status", "ok");
+  live.set("status", status);
   addDeviceFields(live);
 
   if (!Firebase.RTDB.updateNode(&fbdo_, sensorPath().c_str(), &live)) {

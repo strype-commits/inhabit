@@ -8,8 +8,8 @@ Sketches for the inHabit sensor devices. They write to Firebase as defined in
 | `libraries/InhabitDevice` | ESP32 | Shared library: WiFi, NTP, Firebase writes, auto-registration, OTA + rollback |
 | `legacy/OilLevelVolumeESP32Firebase` | ESP32-WROOM-DA | Reference copy of the firmware currently on the oil tank board (Oct 2025) |
 | `legacy/TempDeviceV3` | ESP32-WROOM-DA | Reference copy of the loft sensor firmware (V3.0.1, Nov 2025) |
-| `oil-tank/` | ESP32-WROOM-DA | New firmware 1.0.0 — compiled, not yet flashed |
-| `loft-sensor/` | ESP32-WROOM-DA | New firmware — to be written against the contract |
+| `oil-tank/` | ESP32-WROOM-DA | Firmware 1.0.3 — in service, updates over WiFi |
+| `loft-sensor/` | ESP32-WROOM-DA | Firmware 1.0.0 — compiled, awaiting first USB flash |
 | `hot-tank/` | TBC | Concept |
 
 ## Secrets

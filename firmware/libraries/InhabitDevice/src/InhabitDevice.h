@@ -51,7 +51,8 @@ class InhabitDevice {
 
   // A good reading: updates sensors/{id} (variables, epoch, nextUpdate, status "ok", ...)
   // and adds sensorDataHistory/{id}/{epoch}. Returns true only if both writes succeed.
-  bool publish(FirebaseJson& variables, uint32_t nextUpdateEpoch);
+  // `status` defaults to "ok"; use e.g. "probe-fault" when some (not all) readings are missing.
+  bool publish(FirebaseJson& variables, uint32_t nextUpdateEpoch, const char* status = "ok");
 
   // A failed reading: updates status/epoch/nextUpdate only — no variables, no history.
   bool publishError(const char* status, uint32_t nextUpdateEpoch);

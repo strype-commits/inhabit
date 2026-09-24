@@ -1,4 +1,4 @@
-# inHabit device data contract — v0.2 (draft)
+# inHabit device data contract — v0.3 (draft)
 
 How sensor devices write to the Firebase Realtime Database, and what the app expects.
 Firmware and app are both built to this document; change it first, then the code.
@@ -13,7 +13,7 @@ Database: `inhabit-webapp-default-rtdb.europe-west1.firebasedatabase.app`.
 | D1 | Device authentication | **Decided:** one shared account `device@strype.uk` for all devices, replacing the legacy database secret |
 | D2 | `status` values | `ok` / `sensor-error` / `updating` / `update-failed` (see §4) |
 | D3 | Oil reporting rule | Every 4 h, plus immediately on a change of ≥ 20 L, plus the manual button — **implemented in oil-tank 1.0.0** |
-| D4 | Loft history keys | Rename to match `variables` (`temperature`, `PipeTemp`, `LoftTemp`, `AnnexeTemp`) |
+| D4 | Loft variables | **Decided:** `pipeTemp`, `loftTemp`, `annexeTemp`, `enclosureTemp` in both live and history (loft-sensor 1.0.0). Legacy history keys (`Pipe`, `Loft`, …) can be migrated once |
 
 ## 1. Who owns which field
 
@@ -33,10 +33,11 @@ Each sensor lives at `sensors/{sensorId}`. Fields are owned by **either** the de
 | `type`, `units`, `primaryVariable` | app | How the app interprets `variables` |
 | `expectedFrequencyMinutes`, `staleAfterMultiplier`, `retentionDays`, `showHistory` | app | "Sensor parameters" card |
 
-**Auto-registration.** On boot the device reads `sensors/{sensorId}/name`. Only if that read
-succeeds *and* the sensor doesn't exist does the device write its registration defaults
-(`name`, `location`, `owner`, `type`, `units`, `primaryVariable`). A new device therefore
-appears in the app automatically; after that the app owns those fields.
+**Auto-registration.** On boot the device reads `sensors/{sensorId}`. If that read succeeds, it
+writes any of its registration defaults (`name`, `location`, `owner`, `type`, `units`,
+`primaryVariable`) that are **missing** — never overwriting existing values. A new device
+therefore appears in the app automatically, and an existing one gains new fields; after that
+the app owns them.
 
 **Devices must update, never replace.** Use `Firebase.RTDB.updateNode()` with only the
 device-owned fields. `setJSON()` on `sensors/{sensorId}` wipes the app-owned fields
@@ -79,6 +80,7 @@ Each reading is two writes:
 | `status` | Meaning | Device behaviour |
 |---|---|---|
 | `ok` | Reading taken and plausible | Normal live + history writes |
+| `probe-fault` | Some probes failed; the rest reported | Normal writes with the failed variables omitted |
 | `sensor-error` | A probe failed or gave an impossible value | Update `status`, `epoch`, `nextUpdate` only. **Do not** write `variables` or history |
 | `updating` | Installing a new firmware build | Set just before download; next status comes from the new build |
 | `update-failed` | Download or verification failed | Device keeps running its current build |
@@ -97,7 +99,7 @@ Report on a schedule **and** on meaningful change, never every loop:
 | Sensor | Schedule | Also report when |
 |---|---|---|
 | `0158-oil-volume` (`litres`, `depthCm`) | every 4 h | level changes ≥ 20 L since last report (checked every 5 min); button press |
-| `loftSensor` | 15 min if lowest temp < 5 °C, 1 h if < 15 °C, else 3 h | — |
+| `loftSensor` (`pipeTemp`, `loftTemp`, `annexeTemp`, `enclosureTemp`) | by lowest probe: < 3 °C every 15 min, < 8 °C hourly, else 3 h (0.5 °C hysteresis) | measured every minute; immediately on a zone change confirmed by two consecutive measurements |
 
 Write budget: at most ~100 writes/day per device. A 1-minute interval (≈ 2,900 writes/day)
 is out of contract.
@@ -159,6 +161,8 @@ No Arduino Cloud needed — devices pull updates from Firebase Hosting (free).
 
 ## Changelog
 
+- **v0.3 (2026-09-24)** — Registration fills missing fields. Loft: frost zones, `probe-fault`
+  status, new variable names (D4).
 - **v0.2 (2026-09-23)** — Auto-registration kept (write defaults only if the sensor is new).
   OTA via Firebase Hosting with rollback (§8), commands (§9). Oil board: temperature probe
   removed (was on pin 32 with the button), `depthCm` added. Status values revised.
