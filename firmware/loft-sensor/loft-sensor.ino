@@ -7,7 +7,7 @@
 #include <DallasTemperature.h>
 #include "secrets.h"
 
-#define FW_VERSION "1.0.0"
+#define FW_VERSION "1.0.1"
 
 // ===== Probes =====
 #define ONE_WIRE_BUS 4
