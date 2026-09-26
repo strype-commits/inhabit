@@ -145,10 +145,11 @@ void InhabitDevice::registerIfNeeded() {
   // Fill in only the registration fields that are missing; never overwrite app-edited values.
   FirebaseJson existing;
   if (fbdo_.dataType() == "json") existing = fbdo_.jsonObject();
-  FirebaseJsonData probe;
+  // Fresh result object per lookup: FirebaseJson::get() doesn't reset `success` on a miss,
+  // so a reused object reports every later key as present.
   auto missing = [&](const char* key) {
-    existing.get(probe, key);
-    return !probe.success;
+    FirebaseJsonData probe;
+    return !existing.get(probe, key) || !probe.success;
   };
 
   const InhabitRegistration& r = cfg_.registration;
