@@ -62,7 +62,13 @@ if (command === 'publish') {
   }
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
   console.log(`\nStaged ${file} (${data.length} bytes, md5 ${manifest.md5})`)
-  execFileSync('firebase', ['deploy', '--only', 'hosting:firmware'], { stdio: 'inherit', shell: true })
+  try {
+    execFileSync('firebase', ['deploy', '--only', 'hosting:firmware'], { stdio: 'inherit', shell: true })
+  } catch (err) {
+    console.error(`\nUPLOAD FAILED — ${version} is staged locally but NOT live. Devices will not see it.`)
+    console.error('Re-run: firebase deploy --only hosting:firmware')
+    process.exit(1)
+  }
   console.log(`\nPublished. Devices on "${sketch}" will install ${version} at their next check (≤ 24 h),`)
   console.log(`or immediately after their next report if commands/<sensorId>/checkUpdate is set to true.`)
 }
