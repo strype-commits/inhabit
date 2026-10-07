@@ -3,7 +3,7 @@
 #include <InhabitDevice.h>
 #include "secrets.h"
 
-#define FW_VERSION "1.0.4"
+#define FW_VERSION "1.0.5"
 
 // ===== Pins =====
 #define TRIG_PIN 27
@@ -13,15 +13,17 @@
 #define LED_RED 4
 
 // ===== Tank calibration =====
-// Horizontal cylinder, 1200 mm diameter × 1787 mm long, sensor at the top. Checked against a
-// 1000 L delivery into the run-dry tank (7 Oct 2026): 58.5 cm of air = 61.5 cm of oil = 1043 L,
-// i.e. the delivery plus ~43 L left below the outlet. `litres` is USABLE oil above that reserve.
-// Note: an empty tank does not give a clean echo (readings wandered 97–111 cm), so readings
-// below roughly 250 L can be up to ~200 L high. Don't calibrate from the empty tank.
-const float SENSOR_HEIGHT_CM = 120.0;    // sensor face to tank bottom
-const float TANK_DIAMETER_CM = 120.0;
-const float TANK_CAPACITY_L = 2021.0;    // geometric volume of the full cylinder
-const float RESERVE_L = 43.0;            // below the outlet (~6.5 cm deep); the boiler can't draw it
+// Two measured points, both confirmed (the empty depth by dipstick, Oct 2026):
+//   97.5 cm of air = empty (run-dry tank)
+//   58.5 cm of air = 1000 L (metered delivery into the empty tank, 7 Oct 2026)
+// In between, a horizontal-cylinder fill curve over the 97.5 cm height; the capacity is the
+// value that puts the curve through the 1000 L point. The tank is not a true cylinder (ribs,
+// non-planar ends), so treat readings well above 1000 L as approximate until a fuller delivery
+// gives a third point. Readings also drift a couple of cm with air temperature — not compensated.
+const float SENSOR_HEIGHT_CM = 97.5;     // sensor face to tank bottom
+const float TANK_DIAMETER_CM = 97.5;     // fill-curve height (oil depth at the sensor face)
+const float TANK_CAPACITY_L = 2676.0;    // curve scale: 1000 L at 39.0 cm deep
+const float RESERVE_L = 0.0;             // litres are measured from the run-dry level
 const float MIN_RELIABLE_CM = 10.0;      // ultrasonic readings closer than this are unreliable
 const float MAX_RANGE_CM = 200.0;        // generous, so an empty tank still reports its true distance
 
