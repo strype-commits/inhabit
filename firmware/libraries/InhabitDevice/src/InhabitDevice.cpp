@@ -231,6 +231,7 @@ void InhabitDevice::markHealthy() {
     esp_ota_mark_app_valid_cancel_rollback();
     pendingVerify_ = false;
     Serial.println("[ota] new build confirmed good");
+    Firebase.RTDB.deleteNode(&fbdo_, (sensorPath() + "/updatingTo").c_str());  // update finished
     lastOtaCheckMs_ = millis();  // don't immediately re-check after an update
   } else if (lastOtaCheckMs_ == 0) {
     checkForUpdate();  // first check after boot

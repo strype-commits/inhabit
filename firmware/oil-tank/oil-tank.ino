@@ -3,7 +3,7 @@
 #include <InhabitDevice.h>
 #include "secrets.h"
 
-#define FW_VERSION "1.0.3"
+#define FW_VERSION "1.0.4"
 
 // ===== Pins =====
 #define TRIG_PIN 27
@@ -13,10 +13,15 @@
 #define LED_RED 4
 
 // ===== Tank calibration =====
-// The tank isn't a true cylinder (ribs, non-planar ends), so volume uses a horizontal-cylinder
-// fill curve scaled between the measured empty level and nominal capacity.
-const float SENSOR_HEIGHT_CM = 97.5;     // sensor face to the run-out level, measured on an empty tank (Sep 2026)
-const float TANK_CAPACITY_L = 2000.0;    // nominal volume with oil up to the sensor
+// Horizontal cylinder, 1200 mm diameter × 1787 mm long, sensor at the top. Checked against a
+// 1000 L delivery into the run-dry tank (7 Oct 2026): 58.5 cm of air = 61.5 cm of oil = 1043 L,
+// i.e. the delivery plus ~43 L left below the outlet. `litres` is USABLE oil above that reserve.
+// Note: an empty tank does not give a clean echo (readings wandered 97–111 cm), so readings
+// below roughly 250 L can be up to ~200 L high. Don't calibrate from the empty tank.
+const float SENSOR_HEIGHT_CM = 120.0;    // sensor face to tank bottom
+const float TANK_DIAMETER_CM = 120.0;
+const float TANK_CAPACITY_L = 2021.0;    // geometric volume of the full cylinder
+const float RESERVE_L = 43.0;            // below the outlet (~6.5 cm deep); the boiler can't draw it
 const float MIN_RELIABLE_CM = 10.0;      // ultrasonic readings closer than this are unreliable
 const float MAX_RANGE_CM = 200.0;        // generous, so an empty tank still reports its true distance
 
@@ -108,15 +113,16 @@ float measureDistanceCm() {
 }
 
 float depthFromDistance(float distanceCm) {
-  return constrain(SENSOR_HEIGHT_CM - distanceCm, 0.0, SENSOR_HEIGHT_CM);
+  return constrain(SENSOR_HEIGHT_CM - distanceCm, 0.0, TANK_DIAMETER_CM);
 }
 
-// Litres at depthCm: the filled fraction of a circular cross-section, (θ − sin θ) / 2π,
-// scaled so 0 cm = empty and SENSOR_HEIGHT_CM = TANK_CAPACITY_L.
+// Usable litres at depthCm: the filled fraction of the circular cross-section,
+// (θ − sin θ) / 2π, times the cylinder's volume, less the reserve below the outlet.
 float litresFromDepth(float depthCm) {
-  float f = constrain(depthCm / SENSOR_HEIGHT_CM, 0.0, 1.0);
+  float f = constrain(depthCm / TANK_DIAMETER_CM, 0.0, 1.0);
   float theta = 2.0 * acos(1.0 - 2.0 * f);
-  return TANK_CAPACITY_L * (theta - sin(theta)) / (2.0 * PI);
+  float total = TANK_CAPACITY_L * (theta - sin(theta)) / (2.0 * PI);
+  return max(0.0f, total - RESERVE_L);
 }
 
 // ===== Reporting =====
