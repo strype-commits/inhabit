@@ -134,6 +134,28 @@
     },
     "alertState": {
       ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)"
+    },
+    "featureRequests": {
+      ".read": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)) || (auth != null && query.orderByChild === 'uid' && query.equalTo === auth.uid)",
+      ".indexOn": [
+        "uid"
+      ],
+      "$id": {
+        ".write": "(auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'master' || root.child('users').child(auth.uid).child('isDeveloper').val() === true)) || (auth != null && !data.exists() && newData.child('uid').val() === auth.uid && newData.child('status').val() === 'submitted' && newData.child('archived').val() === false)",
+        ".validate": "newData.hasChildren(['type', 'title', 'status', 'uid', 'createdAt'])",
+        "type": {
+          ".validate": "newData.val() === 'feature' || newData.val() === 'bug'"
+        },
+        "title": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "description": {
+          ".validate": "newData.isString() && newData.val().length <= 2000"
+        },
+        "status": {
+          ".validate": "newData.val() === 'submitted' || newData.val() === 'planned' || newData.val() === 'in-progress' || newData.val() === 'complete' || newData.val() === 'wont-do'"
+        }
+      }
     }
   }
 }

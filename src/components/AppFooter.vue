@@ -1,6 +1,6 @@
 <template>
   <footer class="app-footer">
-    <span><b>inHabit</b></span>
+    <RouterLink to="/feature-requests">Feature requests</RouterLink>
     <span aria-hidden="true">·</span>
     <RouterLink to="/changelog">What's new</RouterLink>
     <span aria-hidden="true">·</span>

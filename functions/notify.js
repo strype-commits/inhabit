@@ -53,11 +53,12 @@ export function describe({ sensor, kind, rule, value }) {
     : { title: `${name}: ${label} back to normal`, body: `${label} is ${fmt(value, unit)}, back above ${fmt(rule.below, unit)}.` }
 }
 
-async function recipients(sensorId) {
+// Everyone who can see a sensor — or, with no sensorId, admins only.
+async function recipients(sensorId = null) {
   const users = (await getDatabase().ref('users').once('value')).val() || {}
   return Object.entries(users)
     .filter(([, u]) => u && u.role !== 'device')
-    .filter(([, u]) => ADMIN_ROLES.includes(u.role) || u.isDeveloper === true || u.sensors?.[sensorId])
+    .filter(([, u]) => ADMIN_ROLES.includes(u.role) || u.isDeveloper === true || (sensorId && u.sensors?.[sensorId]))
     .map(([uid, u]) => ({
       uid,
       email: u.email,
@@ -116,18 +117,18 @@ export async function userDevices(uid) {
   return Object.entries(tokens).filter(([, t]) => t?.token).map(([deviceId, t]) => ({ uid, deviceId, token: t.token }))
 }
 
-export async function notifySensorUsers({ sensorId, sensor, kind, rule, value }) {
-  const { title, body } = describe({ sensor, kind, rule, value })
-  const link = `${APP_URL.value()}/sensor/${sensorId}`
+// In-app feed entry + push + email (if wanted) for each person. `feed` holds extra fields for
+// the in-app entry (sensorId/ruleId for alerts, path for anything else).
+async function deliver(people, { title, body, path, tag, kind, feed = {} }) {
+  const link = `${APP_URL.value()}${path}`
   const db = getDatabase()
-  const people = await recipients(sensorId)
   const createdAt = Date.now()
 
   await Promise.all(people.map(({ uid }) =>
-    db.ref(`notifications/${uid}`).push({ sensorId, ruleId: rule.id, kind, title, body, createdAt, read: false })))
+    db.ref(`notifications/${uid}`).push({ ...feed, path, kind, title, body, createdAt, read: false })))
 
   const devices = people.flatMap((p) => p.devices.map((d) => ({ uid: p.uid, ...d })))
-  const push = await sendPush(devices, { title, body, url: link, tag: `${sensorId}-${rule.id}` })
+  const push = await sendPush(devices, { title, body, url: link, tag })
     .catch((err) => { logger.error('Push failed', { message: err?.message }); return null })
 
   // One email per person, so addresses aren't shared between recipients.
@@ -136,8 +137,25 @@ export async function notifySensorUsers({ sensorId, sensor, kind, rule, value })
       const result = await sendEmail(p.email, title, body, link)
       if (result === 'skipped') { logger.info('Email skipped: RESEND_API_KEY not set'); break }
     } catch (err) {
-      logger.error('Alert email failed', { uid: p.uid, message: err?.message })
+      logger.error('Email failed', { uid: p.uid, message: err?.message })
     }
   }
-  logger.info('Alert delivered', { sensorId, rule: rule.id, kind, recipients: people.length, push })
+  return { recipients: people.length, push }
+}
+
+export async function notifySensorUsers({ sensorId, sensor, kind, rule, value }) {
+  const { title, body } = describe({ sensor, kind, rule, value })
+  const result = await deliver(await recipients(sensorId), {
+    title, body, kind,
+    path: `/sensor/${sensorId}`,
+    tag: `${sensorId}-${rule.id}`,
+    feed: { sensorId, ruleId: rule.id }
+  })
+  logger.info('Alert delivered', { sensorId, rule: rule.id, kind, ...result })
+}
+
+// Notify admins only (e.g. a new feature request). `path` is the in-app page to open.
+export async function notifyAdmins({ title, body, path, tag, kind = 'info' }) {
+  const result = await deliver(await recipients(), { title, body, path, tag, kind })
+  logger.info('Admin notification delivered', { title, ...result })
 }

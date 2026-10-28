@@ -87,10 +87,14 @@
       </div>
     </section>
   </template>
+  <!-- ===== Feature requests ===== -->
+  <AdminFeatureRequests v-if="tab === 'requests'" />
 </template>
 
 <script setup>
 import { ref, reactive, computed, watch, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import AdminFeatureRequests from '@/components/AdminFeatureRequests.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useNow } from '@/composables/useNow'
@@ -106,8 +110,17 @@ const auth = useAuthStore()
 const toast = useToastStore()
 const now = useNow()
 
-const tabs = [{ id: 'users', label: 'Users' }, { id: 'sensors', label: 'Sensors' }]
-const tab = ref('users')
+const tabs = [
+  { id: 'users', label: 'Users' },
+  { id: 'sensors', label: 'Sensors' },
+  { id: 'requests', label: 'Feature requests' }
+]
+// Tab lives in the URL (?tab=requests) so notifications can link straight to it.
+const route = useRoute()
+const router = useRouter()
+const tab = ref(tabs.some((t) => t.id === route.query.tab) ? route.query.tab : 'users')
+watch(tab, (t) => router.replace({ query: { ...route.query, tab: t } }))
+watch(() => route.query.tab, (t) => { if (t && tabs.some((x) => x.id === t)) tab.value = t })
 const users = ref({})
 const sensors = ref({})
 const commands = ref({})

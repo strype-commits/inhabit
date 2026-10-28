@@ -59,3 +59,4 @@ export const pruneSensorHistoryDaily = onSchedule(
 // Sensor alerts and notifications (see alerts.js / notify.js).
 export { evaluateSensorAlerts, checkOfflineSensors } from './alerts.js'
 export { sendTestPush, sendTestEmail } from './testPush.js'
+export { onFeatureRequestCreated, featureRequestsExport } from './featureRequests.js'

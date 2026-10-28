@@ -21,6 +21,7 @@
           {{ formatRelativeTime(new Date(n.createdAt), now) }}
         </time>
         <RouterLink v-if="n.sensorId" :to="`/sensor/${n.sensorId}`" @click="open(n)">View sensor</RouterLink>
+        <RouterLink v-else-if="n.path" :to="n.path" @click="open(n)">View</RouterLink>
         <button class="link-btn" @click="dismiss(n)">Dismiss</button>
       </div>
     </div>

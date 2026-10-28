@@ -8,6 +8,12 @@ The in-app, plain-language version lives in `public/changelog.json`.
 _On dev. Not yet in production._
 
 ### Added
+- Feature requests: footer link (replaces the wordmark) to `/feature-requests` — submit a feature or bug
+  and see your own requests' status. Stored at `featureRequests/{id}`; admins are notified (bell, push,
+  email). Admin → Feature requests tab: status pills with counts, type filter, sort, inline status/type,
+  Edit, Archive (never delete), admin notes, silent `closedAt`. `featureRequestsExport` function: key-gated
+  (`FEATURE_EXPORT_KEY`), PII-stripped JSON with status/type filters.
+- `notifyAdmins()` in functions/notify.js; notifications can carry a `path` link.
 - Hot tank sensor support (`Hot_Tank_Sensor_Brief_v0.2.md`), all through the shared sensor page and card,
   driven by fields on the sensor node (existing sensors have none of them, so they render as before):
   - "Update now" on Sensor Detail when the sensor has a `localUrl` (`services/localBoard.js`). It is a plain
