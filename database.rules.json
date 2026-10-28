@@ -53,6 +53,21 @@
         "updatingTo": {
           ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
         },
+        "state": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "localUrl": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "variableLabels": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "variableUnits": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+        },
+        "secondaryVariable": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
+        },
         "name": {
           ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()"
         },
@@ -78,6 +93,7 @@
           ".validate": "newData.isNumber() && newData.val() >= 1"
         },
         "retentionDays": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device' && !data.exists()",
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 3650"
         },
         "showHistory": {

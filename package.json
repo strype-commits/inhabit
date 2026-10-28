@@ -15,7 +15,8 @@
     "gen:icons": "node scripts/generate-icons.mjs",
     "deploy:functions": "firebase deploy --only functions",
     "fw:build": "node scripts/firmware.mjs build",
-    "fw:publish": "node scripts/firmware.mjs publish"
+    "fw:publish": "node scripts/firmware.mjs publish",
+    "fw:test": "node firmware/hot-tank/test/run-tests.mjs"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

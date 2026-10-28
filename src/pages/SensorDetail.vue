@@ -12,11 +12,23 @@
     <section class="card" :class="`state-${stale.state}`">
       <div class="headline-row">
         <div class="headline">{{ headline }}</div>
+        <span v-if="shown.state" class="device-state">{{ shown.state }}</span>
         <span v-if="stale.state === 'stale'" class="stale-pill">Stale</span>
+        <!-- Only for boards that publish a local address; a plain link, so it works even where
+             the in-app refresh can't. -->
+        <a v-if="localUrl" :href="localUrl" target="_blank" rel="noopener" class="btn btn-secondary btn-sm update-now"
+           :aria-busy="localBusy" @click="updateNow">{{ localBusy ? 'Updating…' : 'Update now' }}</a>
       </div>
+      <p v-if="secondary" class="secondary">{{ secondary.label }}: {{ secondary.value }}</p>
+      <p v-if="live" class="local-note">Live from the board just now. It reaches inHabit with the board's next report.</p>
+      <p v-else-if="unreachable" class="local-note local-warn">
+        The board isn't reachable from here, so this is the last reading it sent<template v-if="lastDate">
+        ({{ formatRelativeTime(lastDate, now) }})</template>.
+        <a :href="localUrl" target="_blank" rel="noopener">Open the board's page</a>
+      </p>
       <dl class="facts">
         <template v-if="sensor.location"><dt>Location</dt><dd>{{ sensor.location }}</dd></template>
-        <template v-if="sensor.status"><dt>Status</dt><dd>{{ sensor.status }}</dd></template>
+        <template v-if="shown.status"><dt>Status</dt><dd>{{ shown.status }}</dd></template>
         <template v-if="sensor.type"><dt>Type</dt><dd>{{ sensor.type }}</dd></template>
         <dt>Last updated</dt>
         <dd>
@@ -39,7 +51,7 @@
       <h2 class="card-title">Other values</h2>
       <dl class="facts">
         <template v-for="v in otherVariables" :key="v.key">
-          <dt>{{ humanizeKey(v.key) }}</dt><dd>{{ v.value }}</dd>
+          <dt>{{ variableLabel(sensor, v.key) }}</dt><dd>{{ v.value }}</dd>
         </template>
       </dl>
     </section>
@@ -68,7 +80,7 @@
         <thead>
           <tr>
             <th>Time</th><th>Interval</th>
-            <th v-for="k in graphKeys" :key="k">{{ graphKeys.length > 1 ? humanizeKey(k) : 'Value' }}</th>
+            <th v-for="k in graphKeys" :key="k">{{ graphKeys.length > 1 ? variableLabel(sensor, k) : 'Value' }}</th>
           </tr>
         </thead>
         <tbody>
@@ -95,9 +107,10 @@ import SensorAlerts from '@/components/SensorAlerts.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNow } from '@/composables/useNow'
 import { subscribeSensor, subscribeRecentHistory, subscribeHistorySince } from '@/services/sensors'
+import { localBoardUrl, fetchLocalReading, localFetchProven, rememberLocalFetchWorks } from '@/services/localBoard'
 import {
-  primaryVariableKey, sensorUnit, formatValue, formatSensorValue,
-  historyEntryValue, timestampToDate, formatDateTime, formatRelativeTime, humanizeKey, variableUnit
+  primaryVariableKey, sensorUnit, formatValue, formatSensorValue, secondaryValue,
+  historyEntryValue, timestampToDate, formatDateTime, formatRelativeTime, variableLabel, variableUnit
 } from '@/utils/formatters'
 import {
   sensorParams, lastUpdatedDate, nextExpectedDate, staleness, formatDuration,
@@ -126,6 +139,11 @@ const recent = ref({})
 const windowHistory = ref({})
 const notFound = ref(false)
 
+// "Update now": a fresh reading straight from a board on the home network (no Firebase traffic).
+const live = ref(null)            // { reading, at } while a local reading is newer than Firebase's
+const localBusy = ref(false)
+const unreachable = ref(false)
+
 let unsubs = []
 let unsubWindow = null
 function unsubscribeAll() {
@@ -142,6 +160,8 @@ watch(() => props.id, (id) => {
   recent.value = {}
   windowHistory.value = {}
   notFound.value = false
+  live.value = null
+  unreachable.value = false
 
   // Client-side courtesy check; database.rules.json is the real enforcement.
   if (!auth.isAdmin && !auth.authorisedSensorIds.includes(id)) {
@@ -159,10 +179,45 @@ watch(() => props.id, (id) => {
 
 onUnmounted(unsubscribeAll)
 
+const localUrl = computed(() => localBoardUrl(sensor.value))
+
+// The sensor as displayed: Firebase's copy, with the board's own reading laid over it while
+// that is the newer of the two.
+const shown = computed(() => {
+  if (!live.value) return sensor.value
+  const { variables, state, status } = live.value.reading
+  return { ...sensor.value, variables, state, status }
+})
+watch(() => sensor.value?.epoch, (epoch) => {
+  const reported = timestampToDate(epoch)
+  if (live.value && reported && reported >= live.value.at) live.value = null
+})
+
+// The link itself opens the board's page, which always works at home. Once an in-app fetch has
+// worked in this browser, the reading is refreshed in place instead; until then the fetch is
+// tried quietly alongside (browsers may block a secure page from calling a LAN address).
+async function updateNow(event) {
+  if (localBusy.value) return event.preventDefault()
+  const inPlace = localFetchProven()
+  if (inPlace) event.preventDefault()
+  localBusy.value = true
+  unreachable.value = false
+  try {
+    const reading = await fetchLocalReading(localUrl.value, inPlace ? 6000 : 10000)
+    live.value = { reading, at: new Date() }
+    rememberLocalFetchWorks()
+  } catch {
+    if (inPlace) unreachable.value = true
+  } finally {
+    localBusy.value = false
+  }
+}
+
 const params = computed(() => sensorParams(sensor.value))
 const primaryKey = computed(() => primaryVariableKey(sensor.value))
 const unit = computed(() => sensorUnit(sensor.value, primaryKey.value))
-const headline = computed(() => formatSensorValue(sensor.value))
+const headline = computed(() => formatSensorValue(shown.value))
+const secondary = computed(() => secondaryValue(shown.value))
 
 // History keys may be seconds or milliseconds; detect from the newest key.
 const newestKey = computed(() => Object.keys(recent.value).sort().at(-1) ?? null)
@@ -238,7 +293,7 @@ const chartSeries = computed(() => {
   const average = raw.some((s) => s.points.length > MAX_PLOTTED_POINTS)
   return raw.map((s) => ({
     key: s.key,
-    label: humanizeKey(s.key),
+    label: variableLabel(sensor.value, s.key),
     colorSlot: colorSlot(sensor.value, s.key),
     points: average
       ? downsample(s.points, MAX_PLOTTED_POINTS, windowStartMs.value, windowEndMs.value, true)
@@ -247,7 +302,7 @@ const chartSeries = computed(() => {
 })
 const windowTruncated = computed(() => Object.keys(windowHistory.value).length >= MAX_CHART_POINTS)
 
-const lastDate = computed(() => lastUpdatedDate(sensor.value, newestKey.value))
+const lastDate = computed(() => live.value?.at ?? lastUpdatedDate(sensor.value, newestKey.value))
 const nextDate = computed(() => nextExpectedDate(sensor.value))
 const bootDate = computed(() => timestampToDate(sensor.value?.bootedAt))
 
@@ -260,7 +315,7 @@ function signalLabel(rssi) {
 const stale = computed(() => staleness(sensor.value, lastDate.value, now.value))
 
 const otherVariables = computed(() =>
-  Object.entries(sensor.value?.variables || {})
+  Object.entries(shown.value?.variables || {})
     .filter(([key]) => key !== primaryKey.value)
     .map(([key, value]) => ({
       key,
@@ -295,7 +350,20 @@ const readings = computed(() => {
 <style scoped>
 .centered { display: flex; justify-content: center; padding: var(--space-8); }
 
-.headline-row { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+.headline-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+.device-state {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
+}
+.update-now { margin-left: auto; text-decoration: none; }
+.update-now[aria-busy="true"] { opacity: 0.6; }
+.secondary { margin: calc(-1 * var(--space-2)) 0 var(--space-3); color: var(--color-text-muted); }
+.local-note { margin: 0 0 var(--space-3); font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.local-warn { color: var(--color-warning); }
 .headline {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);

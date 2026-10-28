@@ -8,6 +8,20 @@ The in-app, plain-language version lives in `public/changelog.json`.
 _On dev. Not yet in production._
 
 ### Added
+- Hot tank sensor support (`Hot_Tank_Sensor_Brief_v0.2.md`), all through the shared sensor page and card,
+  driven by fields on the sensor node (existing sensors have none of them, so they render as before):
+  - "Update now" on Sensor Detail when the sensor has a `localUrl` (`services/localBoard.js`). It is a plain
+    link to the board's LAN page; an in-app `fetch` of `/api/reading` is tried alongside, and once that has
+    worked in a browser (`localStorage['inhabit:localFetchOk']`) later taps refresh in place and show
+    "board isn't reachable from here" with the last Firebase reading's age on failure.
+  - `state` (device) shown as a pill on Sensor Detail and in the card's meta line.
+  - `secondaryVariable` (app-owned): a second figure under the headline when it differs from the primary.
+  - `variableLabels` (device): names for variables, used wherever `humanizeKey` was (`variableLabel()`).
+- Firmware `firmware/hot-tank` 1.0.0 with host tests (`npm run fw:test`); `InhabitDevice` gains
+  `updateSensorFields()`, an optional `state` on `publish()`, extra write-if-missing registration defaults,
+  optional WiFi retry backoff, `updateCheckResult()` and an `onUpdate()` hook. Contract v0.4.
+- `database.rules.json` draft: device may write `state`, `localUrl`, `variableLabels`, `variableUnits`, and
+  `secondaryVariable` / `retentionDays` when absent. Still not deployed.
 - Admin panel (`/admin`, admins only): Users tab (role counts, search, user/admin role, per-user
   sensor access) and Sensors tab (status, last report, firmware vs latest published, signal,
   "Update firmware now" → `commands/{id}/checkUpdate`). Rules: admins may list `users`.

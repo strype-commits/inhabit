@@ -6,11 +6,13 @@
     </div>
 
     <div class="value">{{ value }}</div>
+    <div v-if="secondary" class="secondary">{{ secondary.label }}: {{ secondary.value }}</div>
 
     <div class="meta">
       <span v-if="sensor.location">{{ sensor.location }}</span>
       <span v-if="sensor.location && sensor.status"> • </span>
       <span v-if="sensor.status">{{ sensor.status }}</span>
+      <span v-if="sensor.state"> • {{ sensor.state }}</span>
     </div>
 
     <div class="updated">
@@ -25,7 +27,7 @@
 
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
-import { formatSensorValue, formatRelativeTime, formatDateTime } from '@/utils/formatters'
+import { formatSensorValue, secondaryValue, formatRelativeTime, formatDateTime } from '@/utils/formatters'
 import { lastUpdatedDate, staleness, formatDuration } from '@/utils/sensorConfig'
 import { subscribeRecentHistory } from '@/services/sensors'
 import { useNow } from '@/composables/useNow'
@@ -48,6 +50,7 @@ onUnmounted(() => unsub?.())
 
 // Primary value is chosen by the sensor's `type` metadata, not by variable name.
 const value = computed(() => formatSensorValue(props.sensor))
+const secondary = computed(() => secondaryValue(props.sensor))
 const lastDate = computed(() => lastUpdatedDate(props.sensor, latestKey.value))
 const stale = computed(() => staleness(props.sensor, lastDate.value, now.value))
 const statusTitle = computed(() => stale.value.state === 'stale'
@@ -91,6 +94,7 @@ const statusTitle = computed(() => stale.value.state === 'stale'
   font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
 }
+.secondary { font-size: var(--font-size-xs); color: var(--color-text-muted); }
 .meta { margin-top: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-muted); }
 .updated {
   display: flex;

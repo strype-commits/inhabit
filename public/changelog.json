@@ -5,6 +5,14 @@
     "changes": [
       {
         "type": "feature",
+        "text": "Hot water tank sensor: see how many showers' worth of hot water is in the tank, whether it is heating or cooling, and the temperature at each height."
+      },
+      {
+        "type": "feature",
+        "text": "\"Update now\" on the hot tank page gets a fresh reading straight from the sensor when you are at home."
+      },
+      {
+        "type": "feature",
         "text": "Admin page: manage who can see which sensors, and check or update each device's firmware."
       },
       {

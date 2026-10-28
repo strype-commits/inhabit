@@ -18,7 +18,7 @@
       <dt>History kept for</dt>
       <dd>{{ current.retentionDays ? `${current.retentionDays} days` : `${DEFAULT_RETENTION_DAYS} days (default)` }}</dd>
       <dt>History graph</dt>
-      <dd>{{ current.showHistory ? savedGraphKeys.map(humanizeKey).join(', ') : 'Hidden' }}</dd>
+      <dd>{{ current.showHistory ? savedGraphKeys.map((k) => variableLabel(sensor, k)).join(', ') : 'Hidden' }}</dd>
     </dl>
 
     <!-- Admin edit form -->
@@ -65,7 +65,7 @@
         <label v-for="k in allKeys" :key="k" class="checkbox">
           <input v-model="form.graphVariables" type="checkbox" :value="k" />
           <span class="swatch" :style="{ background: `var(--series-${colorSlot(sensor, k)})` }" aria-hidden="true" />
-          {{ humanizeKey(k) }}
+          {{ variableLabel(sensor, k) }}
         </label>
         <span class="form-hint">Plotted together on one axis in the sensor's units — pick readings that share them.</span>
       </fieldset>
@@ -88,7 +88,7 @@ import {
   sensorParams, deviceIntervalMinutes, formatDuration, DEFAULT_RETENTION_DAYS,
   orderedVariableKeys, graphVariableKeys, colorSlot
 } from '@/utils/sensorConfig'
-import { primaryVariableKey, humanizeKey } from '@/utils/formatters'
+import { primaryVariableKey, variableLabel } from '@/utils/formatters'
 import { updateSensorParameters } from '@/services/sensors'
 import { useToastStore } from '@/stores/toast'
 

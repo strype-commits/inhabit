@@ -6,7 +6,7 @@
     <template v-if="!editable">
       <ul class="rule-list">
         <li v-for="r in savedRules" :key="r.id">
-          {{ r.label || humanizeKey(r.variable) }} below {{ formatValue(r.below, unitOf(r.variable)) }}
+          {{ r.label || variableLabel(sensor, r.variable) }} below {{ formatValue(r.below, unitOf(r.variable)) }}
           <span v-if="r.enabled === false" class="text-muted">(off)</span>
         </li>
         <li>Gone quiet: {{ sensor.alertOffline === false ? 'off' : 'on' }}</li>
@@ -24,7 +24,7 @@
         <input v-model.trim="r.label" class="form-input label-input" type="text" placeholder="Label, e.g. Oil level"
                :aria-label="`Alert ${i + 1} label`" />
         <select v-model="r.variable" class="form-input" :aria-label="`Alert ${i + 1} reading`">
-          <option v-for="k in allKeys" :key="k" :value="k">{{ humanizeKey(k) }}</option>
+          <option v-for="k in allKeys" :key="k" :value="k">{{ variableLabel(sensor, k) }}</option>
         </select>
         <span class="below">below</span>
         <input v-model="r.below" class="form-input num-input" type="number" step="any" required
@@ -57,7 +57,7 @@ import { ref as dbRef, onValue } from 'firebase/database'
 import { db } from '@/services/firebase'
 import { updateSensorParameters } from '@/services/sensors'
 import { useToastStore } from '@/stores/toast'
-import { humanizeKey, formatValue, variableUnit } from '@/utils/formatters'
+import { variableLabel, formatValue, variableUnit } from '@/utils/formatters'
 import { orderedVariableKeys, graphVariableKeys } from '@/utils/sensorConfig'
 
 const props = defineProps({

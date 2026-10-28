@@ -83,6 +83,23 @@ export function humanizeKey(key) {
   return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
+// What to call a variable: the device's own label if it publishes one (variableLabels),
+// otherwise its key made readable.
+export function variableLabel(sensor, key) {
+  const own = sensor?.variableLabels?.[key]
+  return typeof own === 'string' && own ? own : humanizeKey(key)
+}
+
+// An optional second figure to show under the headline (sensor.secondaryVariable), e.g. showers
+// "with reheat". Null unless the sensor names one, it has a value, and it differs from the primary.
+export function secondaryValue(sensor) {
+  const key = sensor?.secondaryVariable
+  const primary = primaryVariableKey(sensor)
+  const vars = sensor?.variables
+  if (!key || !vars || key === primary || vars[key] == null || vars[key] === vars[primary]) return null
+  return { key, label: variableLabel(sensor, key), value: formatValue(vars[key], variableUnit(sensor, key)) }
+}
+
 // Units for one variable: an explicit variableUnits entry, else the sensor's units for the
 // primary variable. Other variables have no units unless the caller knows they share them.
 export function variableUnit(sensor, key) {
