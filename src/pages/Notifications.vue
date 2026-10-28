@@ -45,6 +45,7 @@ const { items, unreadCount } = useNotifications()
 const uid = () => auth.user?.uid
 
 function markAllRead() {
+  seen.clear()
   markRead(uid(), items.value.filter((n) => !n.read).map((n) => n.id))
     .catch((err) => toast.error(`Couldn't update: ${err.message}`))
 }
@@ -54,13 +55,19 @@ function open(n) {
 }
 
 function dismiss(n) {
+  seen.delete(n.id)   // marking a deleted entry read would recreate it as an empty stub
   deleteNotification(uid(), n.id).catch((err) => toast.error(`Couldn't dismiss: ${err.message}`))
 }
 
-// Anything seen on this page counts as read once you leave it.
-let seen = []
-onMounted(() => { seen = items.value.filter((n) => !n.read).map((n) => n.id) })
-onBeforeUnmount(() => { if (uid()) markRead(uid(), seen).catch(() => {}) })
+// Anything seen on this page counts as read once you leave it — but only entries that
+// still exist and are still unread.
+const seen = new Set()
+onMounted(() => { items.value.filter((n) => !n.read).forEach((n) => seen.add(n.id)) })
+onBeforeUnmount(() => {
+  const stillUnread = new Set(items.value.filter((n) => !n.read).map((n) => n.id))
+  const ids = [...seen].filter((id) => stillUnread.has(id))
+  if (uid() && ids.length) markRead(uid(), ids).catch(() => {})
+})
 </script>
 
 <style scoped>

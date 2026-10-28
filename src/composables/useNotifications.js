@@ -2,6 +2,8 @@ import { ref, computed, watch, effectScope } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { subscribeNotifications } from '@/services/notifications'
 
+const isValid = (n) => n && typeof n.title === 'string' && Number.isFinite(Number(n.createdAt))
+
 // One shared subscription to the signed-in user's feed (header bell + notifications page).
 const items = ref([])
 let unsub = null
@@ -17,7 +19,9 @@ export function useNotifications() {
         unsub?.()
         unsub = null
         items.value = []
-        if (uid) unsub = subscribeNotifications(uid, (list) => { items.value = list }, () => {})
+        // Skip malformed entries (e.g. a bare { read: true } stub) so one bad record can't
+        // break the page or inflate the unread count.
+        if (uid) unsub = subscribeNotifications(uid, (list) => { items.value = list.filter(isValid) }, () => {})
       }, { immediate: true })
     })
   }
