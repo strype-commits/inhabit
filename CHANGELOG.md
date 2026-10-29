@@ -3,9 +3,9 @@
 All notable changes to inHabit. Format follows [Keep a Changelog](https://keepachangelog.com/).
 The in-app, plain-language version lives in `public/changelog.json`.
 
-## [1.0.5] - unreleased
+## [1.0.5] - 2026-10-29
 
-_On dev. Not yet in production._
+First production release of the rebuilt app (replaces the original inHabit app).
 
 ### Added
 - Feature requests: footer link (replaces the wordmark) to `/feature-requests` — submit a feature or bug
@@ -26,6 +26,9 @@ _On dev. Not yet in production._
 - Firmware `firmware/hot-tank` 1.0.0 with host tests (`npm run fw:test`); `InhabitDevice` gains
   `updateSensorFields()`, an optional `state` on `publish()`, extra write-if-missing registration defaults,
   optional WiFi retry backoff, `updateCheckResult()` and an `onUpdate()` hook. Contract v0.4.
+- Firmware `oil-tank` 1.0.6: `InhabitDevice` holds off `Firebase.begin()` until the clock is synced and
+  re-runs `configTime` every 60 s until then. 1.0.5 crashed on boot when NTP was slow (weak signal):
+  the Firebase library's own time sync tripped lwIP's "Required to lock TCPIP core" assert.
 - `database.rules.json` draft: device may write `state`, `localUrl`, `variableLabels`, `variableUnits`, and
   `secondaryVariable` / `retentionDays` when absent. Still not deployed.
 - Admin panel (`/admin`, admins only): Users tab (role counts, search, user/admin role, per-user
