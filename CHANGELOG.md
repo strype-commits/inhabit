@@ -3,6 +3,10 @@
 All notable changes to inHabit. Format follows [Keep a Changelog](https://keepachangelog.com/).
 The in-app, plain-language version lives in `public/changelog.json`.
 
+## [1.0.6] - unreleased
+
+_On dev. Not yet in production._
+
 ## [1.0.5] - 2026-10-29
 
 First production release of the rebuilt app (replaces the original inHabit app).
